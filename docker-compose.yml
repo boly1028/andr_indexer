@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  indexer:
+    restart: always
+    image: andromedaprotocol/indexer
+    volumes:
+      - ./:/code
+    links:
+      - mongo:localmongo
+    environment:
+      - DB_URI=mongodb://mongo:27017/andromeda-indexer
+  mongo:
+    image: mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb:/data/db
+volumes:
+ mongodb:
