@@ -28,7 +28,7 @@ function splitAttributesByKey(key: string, event: Event): Attribute[][] {
 
 function getADOAppInstantiations(logs: readonly Log[], appAddress: string) {
   const ADOs: { address: string; adoType: string; owner: string }[] = [];
-
+  console.log(logs);
   for (let i = 0; i < logs.length; i++) {
     const log = logs[i];
     const wasm = log.events.find((ev) => ev.type === "wasm");
@@ -80,6 +80,7 @@ async function newADO(
     lastUpdatedHash: hash,
     lastUpdatedHeight: height,
     appContract,
+    chainId: process.env.CHAIN_ID ?? "uni-3",
   };
 }
 
@@ -93,9 +94,15 @@ function getInstantiateInfo(logs: readonly Log[]): {
   const [addressAttr] = getAttribute("instantiate._contract_address", logs);
   if (!addressAttr) throw new Error("Instantiation did not include an address");
   const [ownerAttr] = getAttribute("wasm.owner", logs);
-  if (!ownerAttr) throw new Error("Instantiation did not include an owner");
+  const [senderAttr] = getAttribute("message.sender", logs);
+  if (!ownerAttr && !senderAttr)
+    throw new Error("Instantiation did not include an owner");
 
-  return { address: addressAttr.value, owner: ownerAttr.value, adoType };
+  return {
+    address: addressAttr.value,
+    owner: ownerAttr ? ownerAttr.value : senderAttr.value,
+    adoType,
+  };
 }
 
 export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
@@ -117,6 +124,7 @@ export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
         tx.hash,
         ADOModel
       );
+      console.log(adoToAdd);
       if (adoToAdd) bulk.insert(adoToAdd);
 
       if (adoType === "app") {
@@ -182,9 +190,8 @@ export async function handleADOUpdateOwner(batch: readonly CleanedTx[]) {
   const bulk = ADOModel.collection.initializeOrderedBulkOp();
   for (let i = 0; i < batch.length; i++) {
     const tx = batch[i];
-    const { contract } = 
+    // const { contract } = tx.tx.body.messages;
     const updates = getUpdateOwnerLogs(tx.rawLog);
-    console.log(updates);
     updates.forEach(({ contractAddress, newOwner }) => {
       bulk
         .find({

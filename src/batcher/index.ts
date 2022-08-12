@@ -9,7 +9,7 @@ const BATCH_SIZE = process.env.BATCH_SIZE
   : 2000;
 
 export default class Batcher {
-  currHeight = 800000;
+  currHeight = parseInt(process.env.START_HEIGHT ?? "0");
   client: AndromedaClient;
   query: SearchTxQuery;
   processor: ProcessorFunc;

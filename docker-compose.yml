@@ -1,6 +1,6 @@
 version: '3.8'
 services:
-  indexer:
+  uni3-indexer:
     restart: always
     image: andromedaprotocol/indexer
     volumes:
@@ -9,6 +9,19 @@ services:
       - mongo:localmongo
     environment:
       - DB_URI=mongodb://mongo:27017/andromeda-indexer
+      - CHAIN_ID=uni-3
+      - START_HEIGHT=800000
+  elgafar1-indexer:
+    restart: always
+    image: andromedaprotocol/indexer
+    volumes:
+      - ./:/code
+    links:
+      - mongo:localmongo
+    environment:
+      - DB_URI=mongodb://mongo:27017/andromeda-indexer
+      - CHAIN_ID=elgafar-1
+      - START_HEIGHT=500000
   mongo:
     image: mongo
     ports:
