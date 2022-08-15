@@ -2,9 +2,9 @@ name: Node Build & Test
 
 on:
   push:
-    branches: *
+    paths: ["**.*"]
   pull_request:
-    branches: *
+    branches: [main, development]
 
 jobs:
   build:
