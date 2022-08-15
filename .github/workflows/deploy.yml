@@ -3,7 +3,7 @@ name: Deployment to Heroku
 on:
   workflow_run:
     workflows: Node Build & Test # Reuse the name of your tests workflow
-    branches: master
+    branches: main
     types: completed
 
 jobs:
