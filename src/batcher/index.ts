@@ -2,12 +2,15 @@ import AndromedaClient, { cleanTx } from "@andromedaprotocol/andromeda.js";
 import type { SearchTxQuery } from "@cosmjs/stargate";
 import { ProcessorFunc } from "../types";
 import { sleep } from "../utils";
-import { SingleBar, Presets } from "cli-progress";
 
+// How many transactions to fetch at a time
 const BATCH_SIZE = process.env.BATCH_SIZE
   ? parseInt(process.env.BATCH_SIZE)
   : 2000;
 
+/**
+ * A class used to fetch blocks in batches and process them using a given query and processing handler
+ */
 export default class Batcher {
   currHeight = parseInt(process.env.START_HEIGHT ?? "0");
   client: AndromedaClient;
@@ -27,10 +30,9 @@ export default class Batcher {
     this.label = label;
   }
 
-  async getBlock(height: number) {
-    return this.client.queryClient?.searchTx({ height });
-  }
-
+  /**
+   * Get all transactions between given heights using the query for the current batcher
+   */
   async getTxs(minHeight: number, maxHeight: number) {
     const resp = await this.client.queryClient?.searchTx(this.query, {
       minHeight,
@@ -40,34 +42,37 @@ export default class Batcher {
     return resp;
   }
 
+  /**
+   * Get all transactions within the next batch, defined by the current block height and the batch size
+   * @param batchSize
+   * @returns
+   */
   async getNextBatch(batchSize: number = BATCH_SIZE) {
+    console.info(
+      `Fetching blocks ${this.currHeight}-${this.currHeight + batchSize}...`
+    );
     const txs = await this.getTxs(this.currHeight, this.currHeight + batchSize);
 
     this.currHeight += batchSize + 1;
     return (txs ?? []).map(cleanTx);
   }
 
+  /**
+   * Start fetching blocks up to the given block height and process them using the defined processor
+   * @param toHeight
+   * @returns
+   */
   async start(toHeight: number) {
     if (toHeight <= this.currHeight) return;
 
-    const prog = new SingleBar(
-      {
-        format: `${this.label} | {bar} | Batch: {value}/{total} | Height: {currHeight}/{toHeight}`,
-      },
-      Presets.rect
-    );
-    prog.start(Math.ceil((toHeight - this.currHeight) / BATCH_SIZE), 0, {
-      toHeight,
-      currHeight: this.currHeight,
-    });
     while (this.currHeight < toHeight) {
-      const batch = await this.getNextBatch(
-        Math.min(BATCH_SIZE, toHeight - this.currHeight)
+      const batchSize = Math.min(BATCH_SIZE, toHeight - this.currHeight);
+      const batch = await this.getNextBatch(batchSize);
+      console.info(
+        `Processing blocks ${this.currHeight - batchSize}-${this.currHeight}`
       );
       await this.processor(batch);
-      prog.increment(1, { currHeight: Math.min(this.currHeight, toHeight) });
       await sleep(1000);
     }
-    prog.stop();
   }
 }

@@ -1,6 +1,9 @@
 import { handleADOInstantiate, handleADOUpdateOwner } from "./processors";
 import { BatchQuery } from "./types";
 
+/**
+ * All of the queries to be run across each chain
+ */
 const queries: BatchQuery[] = [
   {
     query: {

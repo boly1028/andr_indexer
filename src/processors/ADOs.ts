@@ -1,74 +1,35 @@
-import { CleanedTx, getAdoType } from "@andromedaprotocol/andromeda.js";
-import { getAttribute } from "@andromedaprotocol/andromeda.js";
-import { Attribute, Log, Event } from "@cosmjs/stargate/build/logs";
-import mongoose, { Model } from "mongoose";
+import {
+  CleanedTx,
+  getAdoType,
+  getAttribute,
+} from "@andromedaprotocol/andromeda.js";
+import { Log } from "@cosmjs/stargate/build/logs";
+import {
+  createADOBulkOperation,
+  getADOByAddress,
+  splitAttributesByKey,
+} from "../services";
 
-async function findADOByContractAddress(
-  address: string,
-  model: Model<any, any>
-) {
-  return model.findOne({ address });
-}
-
-function splitAttributesByKey(key: string, event: Event): Attribute[][] {
-  const splitIndices: number[] = [];
-  const attributeSlices: Attribute[][] = [];
-  event.attributes.forEach(({ key: attrKey }, idx) => {
-    if (attrKey === key) splitIndices.push(idx);
-  });
-
-  splitIndices.forEach((idx, i) => {
-    const nextIdx =
-      i === splitIndices.length ? splitIndices.length - 1 : splitIndices[i + 1];
-    const attrs = event.attributes.slice(idx, nextIdx);
-    attributeSlices.push(attrs);
-  });
-  return attributeSlices;
-}
-
-function getADOAppInstantiations(logs: readonly Log[], appAddress: string) {
-  const ADOs: { address: string; adoType: string; owner: string }[] = [];
-  console.log(logs);
-  for (let i = 0; i < logs.length; i++) {
-    const log = logs[i];
-    const wasm = log.events.find((ev) => ev.type === "wasm");
-    if (!wasm) continue;
-
-    const attrSlices = splitAttributesByKey("_contract_address", wasm);
-    attrSlices.forEach((attrs) => {
-      const addressAttr = attrs.find(
-        (attr) => attr.key === "_contract_address"
-      );
-      if (!addressAttr) return;
-      const adoTypeAttr = attrs.find((attr) => attr.key === "type");
-      if (!adoTypeAttr) return;
-      if (
-        ADOs.some((ado) => ado.address === addressAttr.value) ||
-        addressAttr.value === appAddress
-      )
-        return;
-      ADOs.push({
-        address: addressAttr.value,
-        adoType: adoTypeAttr.value,
-        owner: appAddress,
-      });
-    });
-  }
-
-  return ADOs;
-}
-
+/**
+ * Creates a new ADO object after checking that the ADO does not already exist in the DB
+ * @param owner
+ * @param address
+ * @param adoType
+ * @param height
+ * @param hash
+ * @param appContract
+ * @returns A new ADO object
+ */
 async function newADO(
   owner: string,
   address: string,
   adoType: string,
   height: number,
   hash: string,
-  model: Model<any, any>,
   appContract?: string
 ) {
   // Check ADO hasn't been added already
-  const savedADO = await findADOByContractAddress(address, model);
+  const savedADO = await getADOByAddress(address);
   if (savedADO) return;
 
   return {
@@ -84,7 +45,65 @@ async function newADO(
   };
 }
 
-function getInstantiateInfo(logs: readonly Log[]): {
+interface AppInstantiationComponentInfo {
+  address: string;
+  adoType: string;
+  owner: string;
+}
+
+/**
+ * Returns info about any components instantiated by an app
+ * @param logs The logs to retrieve the data from
+ * @param appAddress The current app contract address
+ * @returns
+ */
+export function getAppInstantiationComponentInfo(
+  logs: readonly Log[],
+  appAddress: string
+) {
+  const components: AppInstantiationComponentInfo[] = [];
+  for (let i = 0; i < logs.length; i++) {
+    const log = logs[i];
+    const wasm = log.events.find((ev) => ev.type === "wasm");
+    if (!wasm) continue;
+
+    // Attributes are split in to sections, each beginning with the contract address
+    const attrSlices = splitAttributesByKey("_contract_address", wasm);
+
+    // Each slice contains info about the component's instantiation
+    attrSlices.forEach((attrs) => {
+      //Get the contract address attribute for the component
+      const addressAttr = attrs.find(({ key }) => key === "_contract_address");
+      if (!addressAttr) return;
+
+      //Avoid duplicates
+      if (
+        components.some(({ address }) => address === addressAttr.value) ||
+        addressAttr.value === appAddress
+      )
+        return;
+
+      //Get the ADO type for the component
+      const adoTypeAttr = attrs.find(({ key }) => key === "type");
+      if (!adoTypeAttr) return;
+
+      components.push({
+        address: addressAttr.value,
+        adoType: adoTypeAttr.value,
+        owner: appAddress,
+      });
+    });
+  }
+
+  return components;
+}
+
+/**
+ * Gets the instantiation info about an ADO from given logs
+ * @param logs
+ * @returns
+ */
+export function getInstantiateInfo(logs: readonly Log[]): {
   address: string;
   adoType: string;
   owner: string;
@@ -100,47 +119,39 @@ function getInstantiateInfo(logs: readonly Log[]): {
 
   return {
     address: addressAttr.value,
-    owner: ownerAttr ? ownerAttr.value : senderAttr.value,
+    owner: ownerAttr ? ownerAttr.value : senderAttr.value, //Owner may be defined as an "owner" event or by the "sender"
     adoType,
   };
 }
 
+/**
+ * A handler function for the ADO instantiation query, sifts through transactions to find ADO instantiations before adding them to the DB
+ * @param batch
+ */
 export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
-  if (batch.length === 0) return;
-
-  const ADOModel = mongoose.model("ADO");
-
-  const bulk = ADOModel.collection.initializeOrderedBulkOp();
+  const bulk = createADOBulkOperation();
   for (let i = 0; i < batch.length; i++) {
     const tx = batch[i];
 
     try {
       const { address, adoType, owner } = getInstantiateInfo(tx.rawLog);
-      const adoToAdd = await newADO(
-        owner,
-        address,
-        adoType,
-        tx.height,
-        tx.hash,
-        ADOModel
-      );
-      console.log(adoToAdd);
-      if (adoToAdd) bulk.insert(adoToAdd);
+      const ado = await newADO(owner, address, adoType, tx.height, tx.hash);
+      if (ado) bulk.insert(ado);
 
       if (adoType === "app") {
-        const ADOs = getADOAppInstantiations(tx.rawLog, address);
-        for (let j = 0; j < ADOs.length; j++) {
-          const ado = ADOs[j];
-          const adoToAdd = await newADO(
-            ado.owner,
-            ado.address,
-            ado.adoType,
+        const components = getAppInstantiationComponentInfo(tx.rawLog, address);
+        for (let j = 0; j < components.length; j++) {
+          const { owner, address, adoType } = components[j];
+          const component = await newADO(
+            owner,
+            address,
+            adoType,
             tx.height,
             tx.hash,
-            ADOModel,
             address
           );
-          if (adoToAdd) bulk.insert(adoToAdd);
+
+          if (component) bulk.insert(component);
         }
       }
     } catch (error) {}
@@ -151,24 +162,40 @@ export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
   }
 }
 
-function getUpdateOwnerLogs(logs: readonly Log[]) {
-  const updates: { contractAddress: string; newOwner: string }[] = [];
+interface UpdateOwnerInfo {
+  contractAddress: string;
+  newOwner: string;
+}
+
+/**
+ * Retrieves any ownership updates within a group of logs
+ * @param logs
+ * @returns
+ */
+export function getUpdateOwnerLogs(logs: readonly Log[]): UpdateOwnerInfo[] {
+  const updates: UpdateOwnerInfo[] = [];
+
   for (let i = 0; i < logs.length; i++) {
     const log = logs[i];
     const wasm = log.events.find((ev) => ev.type === "wasm");
     if (!wasm) continue;
+
+    // Attributes are split in to sections, each beginning with the contract address
     const attrSlices = splitAttributesByKey("_contract_address", wasm);
+    // Each slice may contain info about a contract updating ownership
     attrSlices.forEach((attrs) => {
       const contractAddrAttr = attrs.find(
         (attr) => attr.key === "_contract_address"
       );
       if (!contractAddrAttr) return;
 
+      //Find the update owner action index
       const actionIdx = attrs.findIndex(
         ({ key, value }) => key === "action" && value === "update_owner"
       );
 
       if (typeof actionIdx !== "undefined" && actionIdx >= 0) {
+        // The next attribute is always the value of the new owner
         const valueAttr = attrs[actionIdx + 1];
         if (!valueAttr || valueAttr.key !== "value") {
           return;
@@ -182,15 +209,15 @@ function getUpdateOwnerLogs(logs: readonly Log[]) {
   return updates;
 }
 
+/**
+ * A handler function for any ownership updates, sifts through transactions to find ownership updates before updating them in the DB
+ * @param batch
+ */
 export async function handleADOUpdateOwner(batch: readonly CleanedTx[]) {
-  if (batch.length === 0) return;
-
-  const ADOModel = mongoose.model("ADO");
-
-  const bulk = ADOModel.collection.initializeOrderedBulkOp();
+  const bulk = createADOBulkOperation();
   for (let i = 0; i < batch.length; i++) {
     const tx = batch[i];
-    // const { contract } = tx.tx.body.messages;
+
     const updates = getUpdateOwnerLogs(tx.rawLog);
     updates.forEach(({ contractAddress, newOwner }) => {
       bulk

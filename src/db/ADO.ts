@@ -42,12 +42,6 @@ const ADO = new Schema({
   },
 });
 
-ADO.statics.byAddress = function (address: string) {
-  return this.findOne({ address });
-};
+export const adoModel = mongoose.model("ADO", ADO);
 
-ADO.statics.byOwner = function (owner: string) {
-  return this.findOne({ owner });
-};
-
-mongoose.model("ADO", ADO);
+export default adoModel;

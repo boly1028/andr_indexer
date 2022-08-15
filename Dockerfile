@@ -14,6 +14,8 @@ RUN npm install
 
 # Bundle app source
 COPY . .
+ENV PORT=${PORT}
 RUN npm run build
+EXPOSE ${PORT}
 
-CMD [ "node", "dist/index.js" ]
+CMD ["node", "dist/index.js"]
