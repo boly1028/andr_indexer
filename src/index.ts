@@ -8,6 +8,10 @@ import { sleep } from "./utils";
 import http from "http";
 import https from "https";
 
+require("./sentry");
+import * as Sentry from "@sentry/node";
+import { TransactionError } from "./errors";
+
 async function start() {
   await dbConnect();
   const client = await connect();
@@ -28,7 +32,11 @@ async function start() {
       maxHeight = currMaxHeight;
       for (let i = 0; i < batchers.length; i++) {
         const batcher = batchers[i];
-        await batcher.start(maxHeight ?? 0);
+        try {
+          await batcher.start(maxHeight ?? 0);
+        } catch (error) {
+          Sentry.captureException(error);
+        }
       }
     }
   }

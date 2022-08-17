@@ -9,6 +9,7 @@ import {
   getADOByAddress,
   splitAttributesByKey,
 } from "../services";
+import { TransactionError } from "../errors";
 
 /**
  * Creates a new ADO object after checking that the ADO does not already exist in the DB
@@ -154,7 +155,12 @@ export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
           if (component) bulk.insert(component);
         }
       }
-    } catch (error) {}
+    } catch (error) {
+      const { message } = error as Error;
+      if (!message.includes("Not an")) {
+        throw new TransactionError(tx.hash, tx.height, message);
+      }
+    }
   }
 
   if (bulk.batches.length > 0) {

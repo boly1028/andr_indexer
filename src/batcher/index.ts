@@ -54,7 +54,13 @@ export default class Batcher {
     const txs = await this.getTxs(this.currHeight, this.currHeight + batchSize);
 
     this.currHeight += batchSize + 1;
-    return (txs ?? []).map(cleanTx);
+    if (!txs)
+      throw new Error(
+        `Could not fetch transactions between ${this.currHeight}-${
+          this.currHeight + batchSize
+        } on ${process.env.CHAIN_ID}`
+      );
+    return txs.map(cleanTx);
   }
 
   /**
