@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import clc from "cli-color";
 export * from "./ADO";
+export * from "./CodeID";
 
 // process.env.DB_URI || "mongodb://localhost:27017/andromeda-indexer";
 const DB_URI =
@@ -13,6 +14,7 @@ async function connect() {
   console.info(clc.green("Connected to database"));
 
   require("./ADO");
+  require("./CodeID");
 }
 
 export default connect;

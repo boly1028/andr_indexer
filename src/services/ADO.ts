@@ -6,3 +6,5 @@ export const createADOBulkOperation = () =>
 export const getADOByAddress = (address: string) => {
   return adoModel.findOne({ address });
 };
+
+export const saveNewAdo = async (ado: any) => await adoModel.insertMany([ado]);

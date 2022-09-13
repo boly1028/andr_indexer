@@ -7,6 +7,7 @@ import { Log } from "@cosmjs/stargate/build/logs";
 import {
   createADOBulkOperation,
   getADOByAddress,
+  saveNewAdo,
   splitAttributesByKey,
 } from "../services";
 import { TransactionError } from "../errors";
@@ -137,7 +138,7 @@ export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
     try {
       const { address, adoType, owner } = getInstantiateInfo(tx.rawLog);
       const ado = await newADO(owner, address, adoType, tx.height, tx.hash);
-      if (ado) bulk.insert(ado);
+      if (ado) await saveNewAdo(ado);
 
       if (adoType === "app") {
         const components = getAppInstantiationComponentInfo(tx.rawLog, address);
@@ -152,7 +153,7 @@ export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
             address
           );
 
-          if (component) bulk.insert(component);
+          if (component) await saveNewAdo(component);
         }
       }
     } catch (error) {

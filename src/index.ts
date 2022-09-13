@@ -10,33 +10,29 @@ import https from "https";
 
 require("./sentry");
 import * as Sentry from "@sentry/node";
-import { TransactionError } from "./errors";
 
 async function start() {
   await dbConnect();
   const client = await connect();
-  let maxHeight = 0;
 
   // Create batching classes
-  const batchers = queries.map(
-    ({ query, processor, label }) =>
-      new Batcher(client, query, processor, label)
-  );
+  const batchers = [];
+  for (let i = 0; i < queries.length; i++) {
+    const { query, processor, label } = queries[i];
+    const queryObj = await query();
+    batchers.push(new Batcher(client, queryObj, processor, label));
+  }
+
   while (true) {
     // Make sure current height is up to date
-    const currMaxHeight = await client.queryClient?.getHeight();
-    if (currMaxHeight === maxHeight || !currMaxHeight) {
-      await sleep(30000);
-    } else {
-      console.log(`Processing new blocks...`);
-      maxHeight = currMaxHeight;
-      for (let i = 0; i < batchers.length; i++) {
-        const batcher = batchers[i];
-        try {
-          await batcher.start(maxHeight ?? 0);
-        } catch (error) {
-          Sentry.captureException(error);
-        }
+    for (let i = 0; i < batchers.length; i++) {
+      const batcher = batchers[i];
+      try {
+        await batcher.start();
+        await sleep(10000);
+      } catch (error) {
+        console.error(error);
+        Sentry.captureException(error);
       }
     }
   }
@@ -60,7 +56,7 @@ if (cluster.isPrimary) {
     cluster.fork({ CHAIN_ID: chainId, START_HEIGHT: startHeight })
   );
 
-  cluster.on("exit", (worker, code, signal) => {
+  cluster.on("exit", (worker) => {
     console.log(`worker ${worker.process.pid} died`);
   });
 

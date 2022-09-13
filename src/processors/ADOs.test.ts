@@ -4,7 +4,7 @@ import {
   getInstantiateInfo,
   getUpdateOwnerLogs,
 } from "./ADOs";
-import testData from "./ADOs.testdata.json";
+import testData from "./TestData.json";
 
 const appInstantiationLogs = testData.instantiation;
 

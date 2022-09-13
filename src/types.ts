@@ -4,8 +4,9 @@ import { CleanedTx } from "@andromedaprotocol/andromeda.js";
 export type ProcessorFunc = (batch: readonly CleanedTx[]) => Promise<void>;
 
 export interface BatchQuery {
-  query: SearchTxQuery;
+  query: () => Promise<SearchTxQuery> | SearchTxQuery;
   filter?: SearchTxFilter;
+  setup?: () => Promise<void> | void;
   processor: ProcessorFunc;
   label: string;
 }
