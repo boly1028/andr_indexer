@@ -43,7 +43,7 @@ async function newADO(
     lastUpdatedHash: hash,
     lastUpdatedHeight: height,
     appContract,
-    chainId: process.env.CHAIN_ID ?? "uni-3",
+    chainId: process.env.CHAIN_ID ?? "uni-5",
   };
 }
 

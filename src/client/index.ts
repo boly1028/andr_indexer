@@ -3,7 +3,7 @@ import AndromedaClient, {
 } from "@andromedaprotocol/andromeda.js";
 import clc from "cli-color";
 
-const CHAIN_ID = process.env.CHAIN_ID ?? "uni-3";
+const CHAIN_ID = process.env.CHAIN_ID ?? "uni-5";
 
 const client = new AndromedaClient();
 

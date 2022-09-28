@@ -9,7 +9,7 @@ import AndromedaClient, {
 } from "@andromedaprotocol/andromeda.js";
 
 const client = new AndromedaClient();
-const config = getConfigByChainID(process.env.CHAIN_ID ?? "uni-3");
+const config = getConfigByChainID(process.env.CHAIN_ID ?? "uni-5");
 
 /**
  * All of the queries to be run across each chain
@@ -50,7 +50,7 @@ const queries: BatchQuery[] = [
 
       if (!factoryAddress || factoryAddress.length === 0)
         throw new Error(
-          `Could not get Factory address for ${process.env.CHAIN_ID ?? "uni-3"}`
+          `Could not get Factory address for ${process.env.CHAIN_ID ?? "uni-5"}`
         );
       return config!.chainId === "elgafar-1"
         ? {

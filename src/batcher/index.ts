@@ -43,7 +43,7 @@ export default class Batcher {
   async start() {
     const currChainHeight = await this.client.queryClient?.getHeight();
     console.log(
-      `[${process.env.CHAIN_ID ?? "uni-3"} - ${
+      `[${process.env.CHAIN_ID ?? "uni-5"} - ${
         this.label
       }] Fetching transactions from height ${
         this.currHeight

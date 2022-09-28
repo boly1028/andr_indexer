@@ -28,7 +28,7 @@ export async function handleCodeIDLog(batch: readonly CleanedTx[]) {
     const codeIdInfo = getCodeIDInfo(tx.rawLog);
     if (!codeIdInfo) continue;
     const { codeId, adoType } = codeIdInfo;
-    const chainId = process.env.CHAIN_ID ?? "uni-3";
+    const chainId = process.env.CHAIN_ID ?? "uni-5";
     const savedCodeId = await getCodeIDByType(adoType, chainId);
     if (savedCodeId) {
       if (savedCodeId.toJSON().lastUpdatedHeight < tx.height) {
