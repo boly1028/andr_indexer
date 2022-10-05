@@ -47,6 +47,7 @@ const CHAIN_INFO: ChainInfo[] = [
   { chainId: "uni-5", startHeight: 0 },
   { chainId: "elgafar-1", startHeight: 500000 },
   { chainId: "galileo-2", startHeight: 0 },
+  { chainId: "pisco-1", startHeight: 0 },
 ];
 
 if (cluster.isPrimary) {
