@@ -6,6 +6,7 @@
   "scripts": {
     "test": "jest",
     "build": "rimraf dist && tsc",
+    "start": "node dist/index.js",
     "dev": "nodemon --watch \"src/**\" --ext \"ts,json\" --ignore \"src/**/*.spec.ts\" --exec \"ts-node src/index.ts\"",
     "deploy": "docker buildx build --platform linux/amd64 -t registry.heroku.com/afternoon-citadel-91154/andromeda-indexer . && docker push registry.heroku.com/afternoon-citadel-91154/andromeda-indexer && heroku container:release andromeda-indexer"
   },
