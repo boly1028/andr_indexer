@@ -1,17 +1,18 @@
 import AndromedaClient, {
-  getConfigByChainID,
+  ChainConfig,
+  queryChainConfig,
 } from "@andromedaprotocol/andromeda.js";
 import clc from "cli-color";
 
 const CHAIN_ID = process.env.CHAIN_ID ?? "uni-5";
 
-const client = new AndromedaClient();
+export const client = new AndromedaClient();
+export let config: ChainConfig;
 
 export async function connect() {
   console.info(clc.yellow("Andromeda Client connecting..."));
-  const config = getConfigByChainID(CHAIN_ID);
+  config = await queryChainConfig(CHAIN_ID);
   if (!config) throw new Error("No config for provided chain ID");
-
   await client.connect(config?.chainUrl!, config?.registryAddress!);
   console.info(clc.green("Andromeda Client connected!"));
 

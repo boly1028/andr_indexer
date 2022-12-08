@@ -1,15 +1,13 @@
-import { Attribute, Event } from "@cosmjs/stargate/build/logs";
-
 /**
  * Splits an array of events in to an array of array of Attributes by a given key
  * @param key
  * @param event
  * @returns
  */
-export function splitAttributesByKey(key: string, event: Event): Attribute[][] {
+export function splitAttributesByKey(key: string, event: any): any[][] {
   const splitIndices: number[] = [];
-  const attributeSlices: Attribute[][] = [];
-  event.attributes.forEach(({ key: attrKey }, idx) => {
+  const attributeSlices: any[][] = [];
+  event.attributes.forEach(({ key: attrKey }: any, idx: number) => {
     if (attrKey === key) splitIndices.push(idx);
   });
 

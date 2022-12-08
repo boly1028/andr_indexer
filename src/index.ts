@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import cluster from "node:cluster";
 import process from "node:process";
 import Batcher from "./batcher";
@@ -5,11 +6,8 @@ import { connect } from "./client";
 import dbConnect from "./db";
 import queries from "./queries";
 import { sleep } from "./utils";
-import http from "http";
-import https from "https";
 
 require("./sentry");
-import * as Sentry from "@sentry/node";
 
 async function start() {
   await dbConnect();
@@ -45,9 +43,9 @@ interface ChainInfo {
 
 const CHAIN_INFO: ChainInfo[] = [
   { chainId: "uni-5", startHeight: 0 },
-  { chainId: "elgafar-1", startHeight: 500000 },
+  { chainId: "elgafar-1", startHeight: 0 },
   { chainId: "galileo-2", startHeight: 0 },
-  { chainId: "pisco-1", startHeight: 0 },
+  // { chainId: "pisco-1", startHeight: 0 },
 ];
 
 if (cluster.isPrimary) {
@@ -60,15 +58,6 @@ if (cluster.isPrimary) {
   cluster.on("exit", (worker) => {
     console.log(`worker ${worker.process.pid} died`);
   });
-
-  (process.env.SECURE ? https : http)
-    .createServer((req, res) => {
-      res.writeHead(200);
-      res.end("Hello from the indexer!");
-    })
-    .listen(process.env.PORT ?? 8000, () => {
-      console.log(`Primary worker listening on ${process.env.PORT ?? 8000}`);
-    });
 } else {
   console.log(`Worker ${process.pid}-${process.env.CHAIN_ID} started`);
   start();

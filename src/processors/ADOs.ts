@@ -131,7 +131,6 @@ export function getInstantiateInfo(logs: readonly Log[]): {
  * @param batch
  */
 export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
-  const bulk = createADOBulkOperation();
   for (let i = 0; i < batch.length; i++) {
     const tx = batch[i];
 
@@ -162,10 +161,6 @@ export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
         throw new TransactionError(tx.hash, tx.height, message);
       }
     }
-  }
-
-  if (bulk.batches.length > 0) {
-    bulk.execute();
   }
 }
 

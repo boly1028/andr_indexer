@@ -1,16 +1,10 @@
+import { client, config } from "./client";
 import {
   handleADOInstantiate,
   handleADOUpdateOwner,
   handleCodeIDLog,
 } from "./processors";
 import { BatchQuery } from "./types";
-import AndromedaClient, {
-  getConfigByChainID,
-} from "@andromedaprotocol/andromeda.js";
-
-const client = new AndromedaClient();
-const config = getConfigByChainID(process.env.CHAIN_ID ?? "uni-5");
-
 /**
  * All of the queries to be run across each chain
  */
@@ -46,7 +40,7 @@ const queries: BatchQuery[] = [
   {
     query: async () => {
       await client.connect(config!.chainUrl, config!.registryAddress);
-      const factoryAddress = client.ado.factory.address;
+      const factoryAddress = client.adoDB.address;
 
       if (!factoryAddress || factoryAddress.length === 0)
         throw new Error(
