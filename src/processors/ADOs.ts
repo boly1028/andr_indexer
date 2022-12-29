@@ -136,6 +136,7 @@ export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
 
     try {
       const { address, adoType, owner } = getInstantiateInfo(tx.rawLog);
+      const appContract = address;
       const ado = await newADO(owner, address, adoType, tx.height, tx.hash);
       if (ado) await saveNewAdo(ado);
 
@@ -149,7 +150,7 @@ export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
             adoType,
             tx.height,
             tx.hash,
-            address
+            appContract
           );
 
           if (component) await saveNewAdo(component);
