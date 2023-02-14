@@ -42,7 +42,7 @@ interface ChainInfo {
 }
 
 const CHAIN_INFO: ChainInfo[] = [
-  // { chainId: "uni-6", startHeight: 0 },
+  { chainId: "uni-6", startHeight: 0 },
   { chainId: "elgafar-1", startHeight: 0 },
   { chainId: "galileo-3", startHeight: 0 },
   // { chainId: "pisco-1", startHeight: 0 },
