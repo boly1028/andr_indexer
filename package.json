@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/andromedaprotocol/andromeda-indexer#readme",
   "dependencies": {
-    "@andromedaprotocol/andromeda.js": "^0.1.9",
+    "@andromedaprotocol/andromeda.js": "^0.2.4",
     "@cosmjs/cosmwasm-stargate": "^0.29.2",
     "@cosmjs/stargate": "^0.29.2",
     "@sentry/node": "^7.16.0",

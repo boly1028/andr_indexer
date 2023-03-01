@@ -30,9 +30,12 @@ export default class Batcher {
    */
   async getTxs() {
     const minHeight = this.currHeight;
-    const resp = await this.client.queryClient?.searchTx(this.query, {
-      minHeight,
-    });
+    const resp = await this.client.chainClient!.queryClient?.searchTx(
+      this.query,
+      {
+        minHeight,
+      }
+    );
     return resp;
   }
 
@@ -41,7 +44,8 @@ export default class Batcher {
    * @returns
    */
   async start() {
-    const currChainHeight = await this.client.queryClient?.getHeight();
+    const currChainHeight =
+      await this.client.chainClient!.queryClient?.getHeight();
     console.log(
       `[${process.env.CHAIN_ID ?? "uni-5"} - ${
         this.label

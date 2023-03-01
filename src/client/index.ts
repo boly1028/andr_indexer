@@ -13,7 +13,11 @@ export async function connect() {
   console.info(clc.yellow("Andromeda Client connecting..."));
   config = await queryChainConfig(CHAIN_ID);
   if (!config) throw new Error("No config for provided chain ID");
-  await client.connect(config?.chainUrl!, config?.registryAddress!);
+  await client.connect(
+    config.chainUrl!,
+    config.registryAddress!,
+    config.addressPrefix
+  );
   console.info(clc.green("Andromeda Client connected!"));
 
   return client;

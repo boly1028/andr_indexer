@@ -39,7 +39,11 @@ const queries: BatchQuery[] = [
   },
   {
     query: async () => {
-      await client.connect(config!.chainUrl, config!.registryAddress);
+      await client.connect(
+        config!.chainUrl,
+        config!.registryAddress,
+        config!.addressPrefix
+      );
       const factoryAddress = client.adoDB.address;
 
       if (!factoryAddress || factoryAddress.length === 0)

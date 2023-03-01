@@ -112,7 +112,7 @@ export function getInstantiateInfo(logs: readonly Log[]): {
 } {
   const adoType = getAdoType(logs);
   if (!adoType) throw new Error("Not an ADO Tx");
-  const [addressAttr] = getAttribute("instantiate._contract_address", logs);
+  const [addressAttr] = getAttribute("wasm._contract_address", logs);
   if (!addressAttr) throw new Error("Instantiation did not include an address");
   const [ownerAttr] = getAttribute("wasm.owner", logs);
   const [senderAttr] = getAttribute("message.sender", logs);
