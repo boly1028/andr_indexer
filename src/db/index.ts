@@ -4,7 +4,7 @@ export * from "./ADO";
 export * from "./CodeID";
 
 const DB_URI =
-  process.env.DB_URI || "mongodb://localhost:27017/andromeda-indexer";
+  process.env.DB_URI || "mongodb://localhost:27018/andromeda-indexer";
 
 async function connect() {
   console.info(clc.yellow(`Connecting to Database: ${DB_URI}`));
