@@ -195,11 +195,6 @@ describe("The getInstantiateInfo function...", () => {
                 key: "type",
                 value: "app",
               },
-            ],
-          },
-          {
-            type: "instantiate",
-            attributes: [
               {
                 key: "_contract_address",
                 value: "addr",
@@ -235,11 +230,6 @@ describe("The getInstantiateInfo function...", () => {
                 key: "owner",
                 value: owner,
               },
-            ],
-          },
-          {
-            type: "instantiate",
-            attributes: [
               {
                 key: "_contract_address",
                 value: address,
@@ -271,11 +261,6 @@ describe("The getInstantiateInfo function...", () => {
                 key: "type",
                 value: adoType,
               },
-            ],
-          },
-          {
-            type: "instantiate",
-            attributes: [
               {
                 key: "_contract_address",
                 value: address,
