@@ -40,7 +40,12 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Download task definition
+        run: |
+          aws ecs describe-task-definition --task-definition AndrFargateIndexerStackTESTandrIndexerServiceTaskDef41620799 --query taskDefinition > task-definition.json
+
       - name: Build, tag, and push image to Amazon ECR
+        id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: andr-indexer
@@ -49,4 +54,20 @@ jobs:
           # Build a docker container and push it to ECR so that it can be deployed to ECS.
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: andrIndexerContainerTEST
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: AndrFargateIndexerStackTEST-andrIndexerServiceTESTService202D58C1-tDgJkqPr2WBG
+          cluster: AndrFargateIndexerStackTEST-andrIndexerClusterTEST14461569-7njLCd4F6OvB
+          wait-for-service-stability: true
