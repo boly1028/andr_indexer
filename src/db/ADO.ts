@@ -40,6 +40,9 @@ const ADO = new Schema({
     type: String,
     required: true,
   },
+  minter: {
+    type: String,
+  }
 });
 
 export const adoModel = mongoose.model("ADO", ADO);
