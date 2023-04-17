@@ -214,6 +214,7 @@ describe("The getInstantiateInfo function...", () => {
     const adoType = "app";
     const owner = "owner";
     const address = "address";
+    const minter = "minter";
     const input: Log[] = [
       {
         msg_index: 0,
@@ -234,12 +235,16 @@ describe("The getInstantiateInfo function...", () => {
                 key: "_contract_address",
                 value: address,
               },
+              {
+                key: "minter",
+                value: minter,
+              },
             ],
           },
         ],
       },
     ];
-    const expected = { address, adoType, owner };
+    const expected = { address, adoType, owner, minter };
     const result = getInstantiateInfo(input);
 
     expect(result).toEqual(expected);
@@ -249,6 +254,7 @@ describe("The getInstantiateInfo function...", () => {
     const adoType = "app";
     const owner = "owner";
     const address = "address";
+    const minter = "minter";
     const input: Log[] = [
       {
         msg_index: 0,
@@ -265,6 +271,10 @@ describe("The getInstantiateInfo function...", () => {
                 key: "_contract_address",
                 value: address,
               },
+              {
+                key: "minter",
+                value: minter,
+              },
             ],
           },
           {
@@ -279,7 +289,7 @@ describe("The getInstantiateInfo function...", () => {
         ],
       },
     ];
-    const expected = { address, adoType, owner };
+    const expected = { address, adoType, owner, minter };
     const result = getInstantiateInfo(input);
 
     expect(result).toEqual(expected);

@@ -11,11 +11,13 @@ import {
   splitAttributesByKey,
 } from "../services";
 import { TransactionError } from "../errors";
+import process from "node:process";
 
 /**
  * Creates a new ADO object after checking that the ADO does not already exist in the DB
  * @param owner
  * @param address
+ * @param minter
  * @param adoType
  * @param height
  * @param hash
@@ -25,6 +27,7 @@ import { TransactionError } from "../errors";
 async function newADO(
   owner: string,
   address: string,
+  minter: string,
   adoType: string,
   height: number,
   hash: string,
@@ -37,6 +40,7 @@ async function newADO(
   return {
     owner,
     address,
+    minter,
     adoType,
     instantiateHeight: height,
     instantiateHash: hash,
@@ -109,6 +113,7 @@ export function getInstantiateInfo(logs: readonly Log[]): {
   address: string;
   adoType: string;
   owner: string;
+  minter: string
 } {
   const adoType = getAdoType(logs);
   if (!adoType) throw new Error("Not an ADO Tx");
@@ -116,12 +121,14 @@ export function getInstantiateInfo(logs: readonly Log[]): {
   if (!addressAttr) throw new Error("Instantiation did not include an address");
   const [ownerAttr] = getAttribute("wasm.owner", logs);
   const [senderAttr] = getAttribute("message.sender", logs);
+  const [minterAttr] = getAttribute("wasm.minter", logs);
   if (!ownerAttr && !senderAttr)
     throw new Error("Instantiation did not include an owner");
 
   return {
     address: addressAttr.value,
     owner: ownerAttr ? ownerAttr.value : senderAttr.value, //Owner may be defined as an "owner" event or by the "sender"
+    minter: minterAttr? minterAttr.value : "",
     adoType,
   };
 }
@@ -135,10 +142,18 @@ export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
     const tx = batch[i];
 
     try {
-      const { address, adoType, owner } = getInstantiateInfo(tx.rawLog);
+      const { address, adoType, owner, minter } = getInstantiateInfo(tx.rawLog);
       const appContract = address;
-      const ado = await newADO(owner, address, adoType, tx.height, tx.hash);
-      if (ado) await saveNewAdo(ado);
+      const ado = await newADO(owner, address, minter, adoType, tx.height, tx.hash);
+      //sending socket event through IPC(between master and worker) when new ado added
+      if (ado) {
+        await saveNewAdo(ado);
+        if (process.send) process.send({
+          msgType: 'new-ado-added',
+          walletAddress: ado.owner,
+          ado: ado,
+        });
+      }
 
       if (adoType === "app") {
         const components = getAppInstantiationComponentInfo(tx.rawLog, address);
@@ -147,13 +162,22 @@ export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
           const component = await newADO(
             owner,
             address,
+            "",
             adoType,
             tx.height,
             tx.hash,
             appContract
           );
 
-          if (component) await saveNewAdo(component);
+          if (component) {
+            await saveNewAdo(component);
+            //sending socket event when new ado added
+            if (process.send) process.send({
+              msgType: 'new-app-added',
+              walletAddress: component.owner,
+              app: component,
+            });
+          }
         }
       }
     } catch (error) {
@@ -231,6 +255,12 @@ export async function handleADOUpdateOwner(batch: readonly CleanedTx[]) {
           ],
         })
         .update({ $set: { owner: newOwner, lastUpdatedHeight: tx.height } });
+        //sending socket event ownership transferred
+        if (process.send) process.send({
+          msgType: 'ownership-transferred',
+          contractAddress: contractAddress,
+          newOwner: newOwner
+        });
     });
   }
 

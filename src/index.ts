@@ -6,6 +6,9 @@ import { connect } from "./client";
 import dbConnect from "./db";
 import queries from "./queries";
 import { sleep } from "./utils";
+import express from "express";
+import { createServer } from "http";
+import SocketServer from './socket';
 
 require("./sentry");
 
@@ -49,12 +52,38 @@ const CHAIN_INFO: ChainInfo[] = [
   { chainId: "injective-888", startHeight: 0 },
 ];
 
+const port = process.env.PORT || 4000;
+
 if (cluster.isPrimary) {
   console.log(`Primary ${process.pid} is running`);
 
-  CHAIN_INFO.forEach(({ chainId, startHeight }) =>
-    cluster.fork({ CHAIN_ID: chainId, START_HEIGHT: startHeight })
-  );
+  const app = express();
+  const router = express.Router();
+  router.use((req, res, next) => {
+    res.header('Access-Control-Allow-Methods', 'GET');
+    next();
+  });
+  router.get('/health', (req, res) => {
+    res.status(200).send('Ok');
+  });
+  app.use('/api/v1/', router);
+
+  const server = createServer(app);
+  const io = SocketServer.getIo();
+
+  io.attach(server);
+
+  server.listen(port, () => {
+    console.log(`Server listening on port ${port}`);
+  });
+
+  CHAIN_INFO.forEach(({ chainId, startHeight }) => {
+    const worker = cluster.fork({ CHAIN_ID: chainId, START_HEIGHT: startHeight });
+
+    worker.on('message', function(msg) {
+      SocketServer.sendEvents(msg);
+    });
+  });
 
   cluster.on("exit", (worker) => {
     console.log(`worker ${worker.process.pid} died`);
