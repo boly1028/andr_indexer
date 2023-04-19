@@ -55,6 +55,7 @@ interface AppInstantiationComponentInfo {
   address: string;
   adoType: string;
   owner: string;
+  minter: string;
 }
 
 /**
@@ -93,10 +94,14 @@ export function getAppInstantiationComponentInfo(
       const adoTypeAttr = attrs.find(({ key }) => key === "type");
       if (!adoTypeAttr) return;
 
+      //Get the minter for the component
+      const minterAttr = attrs.find(({ key }) => key === "minter");
+
       components.push({
         address: addressAttr.value,
         adoType: adoTypeAttr.value,
         owner: appAddress,
+        minter: minterAttr ? minterAttr.value : ""
       });
     });
   }
@@ -149,7 +154,7 @@ export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
       if (ado) {
         await saveNewAdo(ado);
         if (process.send) process.send({
-          msgType: 'new-ado-added',
+          msgType: adoType === "app" ? "new-app-added" : "new-ado-added",
           walletAddress: ado.owner,
           ado: ado,
         });
@@ -158,26 +163,18 @@ export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
       if (adoType === "app") {
         const components = getAppInstantiationComponentInfo(tx.rawLog, address);
         for (let j = 0; j < components.length; j++) {
-          const { owner, address, adoType } = components[j];
+          const { owner, address, adoType, minter } = components[j];
           const component = await newADO(
             owner,
             address,
-            "",
+            minter,
             adoType,
             tx.height,
             tx.hash,
             appContract
           );
 
-          if (component) {
-            await saveNewAdo(component);
-            //sending socket event when new ado added
-            if (process.send) process.send({
-              msgType: 'new-app-added',
-              walletAddress: component.owner,
-              app: component,
-            });
-          }
+          if (component) await saveNewAdo(component)
         }
       }
     } catch (error) {

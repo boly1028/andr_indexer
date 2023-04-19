@@ -68,6 +68,6 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: AndrFargateIndexerStackTEST-andrIndexerServiceTESTService202D58C1-W7dLdzHTVige
-          cluster: AndrFargateIndexerStackTEST-andrIndexerClusterTEST14461569-EwpMwDY4aAfu
+          service: AndrFargateIndexerStackTEST-andrIndexerServiceTESTService202D58C1-CyCVvkJ5bITe
+          cluster: AndrFargateIndexerStackTEST-andrIndexerClusterTEST14461569-xXtEhzxpD4QL
           wait-for-service-stability: true
