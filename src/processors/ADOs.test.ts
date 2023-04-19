@@ -117,12 +117,14 @@ describe("The getAppInstantiationComponentInfo function...", () => {
           "juno1vace66nf96t7jjh9msd79fmqfryltkjepy25vttdzm9sqayplhqsgjnp64",
         adoType: "crowdfund",
         owner: appAddress,
+        minter: '',
       },
       {
         address:
           "juno16xs4chh3zc93m5uuuwp2e39vhcfgwe5jaradqh58qe6u35e0unpsz00xe2",
         adoType: "cw721",
         owner: appAddress,
+        minter: '',
       },
     ];
 
