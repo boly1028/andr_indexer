@@ -53,6 +53,7 @@ const CHAIN_INFO: ChainInfo[] = [
 ];
 
 const port = process.env.PORT || 4000;
+const gqlURL = process.env.GQL_URL || 'https://gql.testnet.andromedaprotocol.io/graphql';
 
 if (cluster.isPrimary) {
   console.log(`Primary ${process.pid} is running`);
@@ -78,7 +79,7 @@ if (cluster.isPrimary) {
   });
 
   CHAIN_INFO.forEach(({ chainId, startHeight }) => {
-    const worker = cluster.fork({ CHAIN_ID: chainId, START_HEIGHT: startHeight });
+    const worker = cluster.fork({ CHAIN_ID: chainId, START_HEIGHT: startHeight, GQL_URL: gqlURL });
 
     worker.on('message', function(msg) {
       SocketServer.sendEvents(msg);
