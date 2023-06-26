@@ -120,6 +120,8 @@ export function getInstantiateInfo(logs: readonly Log[]): {
   owner: string;
   minter: string
 } {
+  const [wasmAttr] = getAttribute("wasm.method", logs);
+  if (!wasmAttr) throw new Error("Not an Instantiation");
   const adoType = getAdoType(logs);
   if (!adoType) throw new Error("Not an ADO Tx");
   const [addressAttr] = getAttribute("wasm._contract_address", logs);
