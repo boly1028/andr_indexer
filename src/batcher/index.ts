@@ -42,7 +42,6 @@ export default class Batcher {
         query = "message.action='/cosmwasm.wasm.v1.MsgInstantiateContract'"
 
       const url = `${config!.chainUrl}tx_search?query="${query} AND tx.height>=${minHeight} AND tx.height<=${maxHeight}"&page=${txsPage}&per_page=100`;
-      console.log(url);
 
       const dataTxs = await axios.get(url);
       txs.push(...(dataTxs?.data?.result?.txs ?? []));
