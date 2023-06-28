@@ -9,4 +9,4 @@ export const getADOByAddress = (address: string) => {
 
 export const saveNewAdo = async (ado: any) => await adoModel.insertMany([ado]);
 
-export const updateAdo = async (address: string, minter: string) => await adoModel.findOneAndUpdate({ address }, { minter });
+export const updateAdo = async (address: string, data: any) => await adoModel.findOneAndUpdate({ address }, data);
