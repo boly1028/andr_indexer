@@ -111,6 +111,7 @@ describe("The getAppInstantiationComponentInfo function...", () => {
   it("should correctly parse new ADOs from given transaction logs", () => {
     const appAddress =
       "juno1ncxx096kksn4m05pjc5uu8ygg5acqhx0ez0w9ygcxzg8vq46e6nq6xzrz5";
+    const name = "";
     const expected = [
       {
         address:
@@ -118,6 +119,7 @@ describe("The getAppInstantiationComponentInfo function...", () => {
         adoType: "crowdfund",
         owner: appAddress,
         minter: '',
+        name: name,
       },
       {
         address:
@@ -125,6 +127,7 @@ describe("The getAppInstantiationComponentInfo function...", () => {
         adoType: "cw721",
         owner: appAddress,
         minter: '',
+        name: name,
       },
     ];
 
@@ -217,6 +220,7 @@ describe("The getInstantiateInfo function...", () => {
     const owner = "owner";
     const address = "address";
     const minter = "minter";
+    const name = "name";
     const input: Log[] = [
       {
         msg_index: 0,
@@ -234,6 +238,10 @@ describe("The getInstantiateInfo function...", () => {
                 value: owner,
               },
               {
+                key: "andr_app",
+                value: name,
+              },
+              {
                 key: "_contract_address",
                 value: address,
               },
@@ -246,7 +254,7 @@ describe("The getInstantiateInfo function...", () => {
         ],
       },
     ];
-    const expected = { address, adoType, owner, minter };
+    const expected = { address, adoType, owner, minter, name };
     const result = getInstantiateInfo(input);
 
     expect(result).toEqual(expected);
@@ -257,6 +265,7 @@ describe("The getInstantiateInfo function...", () => {
     const owner = "owner";
     const address = "address";
     const minter = "minter";
+    const name = "name";
     const input: Log[] = [
       {
         msg_index: 0,
@@ -277,6 +286,10 @@ describe("The getInstantiateInfo function...", () => {
                 key: "minter",
                 value: minter,
               },
+              {
+                key: "andr_app",
+                value: name,
+              },
             ],
           },
           {
@@ -291,7 +304,7 @@ describe("The getInstantiateInfo function...", () => {
         ],
       },
     ];
-    const expected = { address, adoType, owner, minter };
+    const expected = { address, adoType, owner, minter, name };
     const result = getInstantiateInfo(input);
 
     expect(result).toEqual(expected);
