@@ -1,0 +1,4 @@
+fileignoreconfig:
+- filename: src/processors/ADOs.ts
+  checksum: ebfe2d2c4f2f34ea6c4fb2862cfc6f4ecc37c6f9809c43c5395a6161e74be7d0
+version: "1.0"

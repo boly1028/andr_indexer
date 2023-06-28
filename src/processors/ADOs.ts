@@ -28,6 +28,7 @@ async function newADO(
   owner: string,
   address: string,
   minter: string,
+  name: string,
   adoType: string,
   height: number,
   hash: string,
@@ -41,6 +42,7 @@ async function newADO(
     owner,
     address,
     minter,
+    name,
     adoType,
     instantiateHeight: height,
     instantiateHash: hash,
@@ -56,6 +58,7 @@ interface AppInstantiationComponentInfo {
   adoType: string;
   owner: string;
   minter: string;
+  name: string;
 }
 
 /**
@@ -97,11 +100,15 @@ export function getAppInstantiationComponentInfo(
       //Get the minter for the component
       const minterAttr = attrs.find(({ key }) => key === "minter");
 
+      //Get the name for the app component
+      const componentNameAttr = attrs.find(({ key }) => key === "andr_component");
+
       components.push({
         address: addressAttr.value,
         adoType: adoTypeAttr.value,
         owner: appAddress,
-        minter: minterAttr ? minterAttr.value : ""
+        minter: minterAttr ? minterAttr.value : "",
+        name: componentNameAttr ? componentNameAttr.value : ""
       });
     });
   }
@@ -118,7 +125,8 @@ export function getInstantiateInfo(logs: readonly Log[]): {
   address: string;
   adoType: string;
   owner: string;
-  minter: string
+  minter: string;
+  name: string;
 } {
   const adoType = getAdoType(logs);
   if (!adoType) throw new Error("Not an ADO Tx");
@@ -127,6 +135,7 @@ export function getInstantiateInfo(logs: readonly Log[]): {
   const [ownerAttr] = getAttribute("wasm.owner", logs);
   const [senderAttr] = getAttribute("message.sender", logs);
   const [minterAttr] = getAttribute("wasm.minter", logs);
+  const [appNameAttr] = getAttribute("wasm.andr_app", logs);
   if (!ownerAttr && !senderAttr)
     throw new Error("Instantiation did not include an owner");
 
@@ -135,6 +144,7 @@ export function getInstantiateInfo(logs: readonly Log[]): {
     owner: ownerAttr ? ownerAttr.value : senderAttr.value, //Owner may be defined as an "owner" event or by the "sender"
     minter: minterAttr? minterAttr.value : "",
     adoType,
+    name: appNameAttr ? appNameAttr.value: ""
   };
 }
 
@@ -147,9 +157,9 @@ export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
     const tx = batch[i];
 
     try {
-      const { address, adoType, owner, minter } = getInstantiateInfo(tx.rawLog);
+      const { address, adoType, owner, minter, name } = getInstantiateInfo(tx.rawLog);
       const appContract = address;
-      const ado = await newADO(owner, address, minter, adoType, tx.height, tx.hash);
+      const ado = await newADO(owner, address, minter, name, adoType, tx.height, tx.hash);
       //sending socket event through IPC(between master and worker) when new ado added
       if (ado) {
         await saveNewAdo(ado);
@@ -163,11 +173,12 @@ export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
       if (adoType === "app") {
         const components = getAppInstantiationComponentInfo(tx.rawLog, address);
         for (let j = 0; j < components.length; j++) {
-          const { owner, address, adoType, minter } = components[j];
+          const { owner, address, adoType, minter, name } = components[j];
           const component = await newADO(
             owner,
             address,
             minter,
+            name,
             adoType,
             tx.height,
             tx.hash,
