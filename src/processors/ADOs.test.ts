@@ -151,6 +151,10 @@ describe("The getInstantiateInfo function...", () => {
             type: "wasm",
             attributes: [
               {
+                key: "method",
+                value: "instantiate",
+              },
+              {
                 key: "somekey",
                 value: "somevlaue",
               },
@@ -172,6 +176,10 @@ describe("The getInstantiateInfo function...", () => {
           {
             type: "wasm",
             attributes: [
+              {
+                key: "method",
+                value: "instantiate",
+              },
               {
                 key: "type",
                 value: "app",
@@ -196,6 +204,10 @@ describe("The getInstantiateInfo function...", () => {
           {
             type: "wasm",
             attributes: [
+              {
+                key: "method",
+                value: "instantiate",
+              },
               {
                 key: "type",
                 value: "app",
@@ -229,6 +241,10 @@ describe("The getInstantiateInfo function...", () => {
           {
             type: "wasm",
             attributes: [
+              {
+                key: "method",
+                value: "instantiate",
+              },
               {
                 key: "type",
                 value: adoType,
@@ -274,6 +290,10 @@ describe("The getInstantiateInfo function...", () => {
           {
             type: "wasm",
             attributes: [
+              {
+                key: "method",
+                value: "instantiate",
+              },
               {
                 key: "type",
                 value: adoType,
