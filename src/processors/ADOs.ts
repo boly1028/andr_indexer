@@ -9,9 +9,9 @@ import {
   getADOByAddress,
   saveNewAdo,
   splitAttributesByKey,
+  updateAdoOwner,
 } from "../services";
 import { TransactionError } from "../errors";
-import process from "node:process";
 
 /**
  * Creates a new ADO object after checking that the ADO does not already exist in the DB
@@ -162,15 +162,7 @@ export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
       const { address, adoType, owner, minter, name } = getInstantiateInfo(tx.rawLog);
       const appContract = address;
       const ado = await newADO(owner, address, minter, name, adoType, tx.height, tx.hash);
-      //sending socket event through IPC(between master and worker) when new ado added
-      if (ado) {
-        await saveNewAdo(ado);
-        if (process.send) process.send({
-          msgType: adoType === "app" ? "new-app-added" : "new-ado-added",
-          walletAddress: ado.owner,
-          ado: ado,
-        });
-      }
+      if (ado) await saveNewAdo(ado);
 
       if (adoType === "app") {
         const components = getAppInstantiationComponentInfo(tx.rawLog, address);
@@ -256,25 +248,19 @@ export async function handleADOUpdateOwner(batch: readonly CleanedTx[]) {
     const tx = batch[i];
 
     const updates = getUpdateOwnerLogs(tx.rawLog);
-    updates.forEach(({ contractAddress, newOwner }) => {
-      bulk
-        .find({
-          $and: [
-            { address: contractAddress },
-            { lastUpdatedHeight: { $lt: tx.height } },
-          ],
-        })
-        .update({ $set: { owner: newOwner, lastUpdatedHeight: tx.height } });
-        //sending socket event ownership transferred
-        if (process.send) process.send({
-          msgType: 'ownership-transferred',
-          contractAddress: contractAddress,
-          newOwner: newOwner
+    updates.forEach(async ({ contractAddress, newOwner }) => {
+      try {
+        await updateAdoOwner({
+          address: contractAddress,
+          newOwner,
+          txHeight: tx.height
         });
+      } catch (error) {
+        const { message } = error as Error;
+        if (!message.includes("Error executing mongo db update ADO")) {
+          throw new TransactionError(tx.hash, tx.height, message);
+        }
+      }
     });
-  }
-
-  if (bulk.batches.length > 0) {
-    bulk.execute();
   }
 }
