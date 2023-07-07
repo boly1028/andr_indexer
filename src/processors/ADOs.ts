@@ -243,7 +243,6 @@ export function getUpdateOwnerLogs(logs: readonly Log[]): UpdateOwnerInfo[] {
  * @param batch
  */
 export async function handleADOUpdateOwner(batch: readonly CleanedTx[]) {
-  const bulk = createADOBulkOperation();
   for (let i = 0; i < batch.length; i++) {
     const tx = batch[i];
 
