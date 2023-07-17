@@ -3,10 +3,14 @@ import AndromedaClient, {
   queryChainConfig,
 } from "@andromedaprotocol/andromeda.js";
 import clc from "cli-color";
+import { GraphQLClient } from 'graphql-request';
 
-const CHAIN_ID = process.env.CHAIN_ID ?? "uni-5";
+const CHAIN_ID = process.env.CHAIN_ID ?? "uni-6";
+const GQL_URL = process.env.GQL_URL ?? "http://0.0.0.0:8085/graphql";
 
 export const client = new AndromedaClient();
+export const graphQLClient = new GraphQLClient(GQL_URL);
+
 export let config: ChainConfig;
 
 export async function connect() {

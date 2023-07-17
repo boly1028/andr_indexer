@@ -8,7 +8,6 @@ import queries from "./queries";
 import { sleep } from "./utils";
 import express from "express";
 import { createServer } from "http";
-import SocketServer from './socket';
 
 require("./sentry");
 
@@ -53,7 +52,7 @@ const CHAIN_INFO: ChainInfo[] = [
 ];
 
 const port = process.env.PORT || 4000;
-const gqlURL = process.env.GQL_URL || 'https://gql.testnet.andromedaprotocol.io/graphql';
+const gqlURL = process.env.GQL_URL || 'http://0.0.0.0:8085/graphql';
 
 if (cluster.isPrimary) {
   console.log(`Primary ${process.pid} is running`);
@@ -70,20 +69,12 @@ if (cluster.isPrimary) {
   app.use('/api/v1/', router);
 
   const server = createServer(app);
-  const io = SocketServer.getIo();
-
-  io.attach(server);
-
   server.listen(port, () => {
     console.log(`Server listening on port ${port}`);
   });
 
   CHAIN_INFO.forEach(({ chainId, startHeight }) => {
-    const worker = cluster.fork({ CHAIN_ID: chainId, START_HEIGHT: startHeight, GQL_URL: gqlURL });
-
-    worker.on('message', function(msg) {
-      SocketServer.sendEvents(msg);
-    });
+    cluster.fork({ CHAIN_ID: chainId, START_HEIGHT: startHeight, GQL_URL: gqlURL });
   });
 
   cluster.on("exit", (worker) => {
