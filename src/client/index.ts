@@ -17,6 +17,8 @@ export async function connect() {
   console.info(clc.yellow("Andromeda Client connecting..."));
   config = await queryChainConfig(CHAIN_ID);
   if (!config) throw new Error("No config for provided chain ID");
+  if (CHAIN_ID === "galileo-3")
+    config.chainUrl = "https://andromeda.rpc.t.anode.team/";
   await client.connect(
     config.chainUrl!,
     config.registryAddress!,
