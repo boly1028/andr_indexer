@@ -48,11 +48,12 @@ const CHAIN_INFO: ChainInfo[] = [
   { chainId: "elgafar-1", startHeight: 0 },
   { chainId: "galileo-3", startHeight: 0 },
   { chainId: "pisco-1", startHeight: 0 },
+  { chainId: "constantine-3", startHeight: 0 },
   { chainId: "injective-888", startHeight: 0 },
 ];
 
 const port = process.env.PORT || 4000;
-const gqlURL = process.env.GQL_URL || 'http://0.0.0.0:8085/graphql';
+const gqlURL = process.env.GQL_URL || "http://0.0.0.0:8085/graphql";
 
 if (cluster.isPrimary) {
   console.log(`Primary ${process.pid} is running`);
@@ -60,13 +61,13 @@ if (cluster.isPrimary) {
   const app = express();
   const router = express.Router();
   router.use((req, res, next) => {
-    res.header('Access-Control-Allow-Methods', 'GET');
+    res.header("Access-Control-Allow-Methods", "GET");
     next();
   });
-  router.get('/health', (req, res) => {
-    res.status(200).send('Ok');
+  router.get("/health", (req, res) => {
+    res.status(200).send("Ok");
   });
-  app.use('/api/v1/', router);
+  app.use("/api/v1/", router);
 
   const server = createServer(app);
   server.listen(port, () => {
@@ -74,7 +75,11 @@ if (cluster.isPrimary) {
   });
 
   CHAIN_INFO.forEach(({ chainId, startHeight }) => {
-    cluster.fork({ CHAIN_ID: chainId, START_HEIGHT: startHeight, GQL_URL: gqlURL });
+    cluster.fork({
+      CHAIN_ID: chainId,
+      START_HEIGHT: startHeight,
+      GQL_URL: gqlURL,
+    });
   });
 
   cluster.on("exit", (worker) => {
