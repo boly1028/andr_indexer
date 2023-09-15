@@ -42,7 +42,7 @@ jobs:
 
       - name: Download task definition
         run: |
-          aws ecs describe-task-definition --task-definition AndrFargateIndexerStackTESTandrIndexerServiceTaskDef41620799 --query taskDefinition > task-definition.json
+          aws ecs describe-task-definition --task-definition AndrIndxStackTESTandrIndxServiceTaskDef3C82FA93 --query taskDefinition > task-definition.json
 
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
@@ -61,13 +61,13 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
-          container-name: andrIndexerContainerTEST
+          container-name: andrIndxContainerTEST
           image: ${{ steps.build-image.outputs.image }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: AndrFargateIndexerStackTEST-andrIndexerServiceTESTService202D58C1-CyCVvkJ5bITe
-          cluster: AndrFargateIndexerStackTEST-andrIndexerClusterTEST14461569-xXtEhzxpD4QL
+          service: AndrIndxStackTEST-andrIndxServiceTESTServiceB92A4372-svL6D6GdopLc
+          cluster: AndrIndxStackTEST-andrIndxClusterTESTD2965567-5k3NLWLT108Z
           wait-for-service-stability: true
