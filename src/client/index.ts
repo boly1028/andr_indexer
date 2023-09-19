@@ -3,7 +3,7 @@ import AndromedaClient, {
   queryChainConfig,
 } from "@andromedaprotocol/andromeda.js";
 import clc from "cli-color";
-import { GraphQLClient } from 'graphql-request';
+import { GraphQLClient } from "graphql-request";
 
 const CHAIN_ID = process.env.CHAIN_ID ?? "uni-6";
 const GQL_URL = process.env.GQL_URL ?? "http://0.0.0.0:8085/graphql";
@@ -21,7 +21,7 @@ export async function connect() {
     config.chainUrl = "https://andromeda.rpc.t.anode.team/";
   await client.connect(
     config.chainUrl!,
-    config.registryAddress!,
+    config.kernelAddress!,
     config.addressPrefix
   );
   console.info(clc.green("Andromeda Client connected!"));

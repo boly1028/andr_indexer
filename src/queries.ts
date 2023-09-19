@@ -41,10 +41,10 @@ const queries: BatchQuery[] = [
     query: async () => {
       await client.connect(
         config!.chainUrl,
-        config!.registryAddress,
+        config!.kernelAddress,
         config!.addressPrefix
       );
-      const factoryAddress = client.adoDB.address;
+      const factoryAddress = client.os.adoDB!.address;
 
       if (!factoryAddress || factoryAddress.length === 0)
         throw new Error(

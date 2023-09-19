@@ -1,5 +1,10 @@
 import AndromedaClient, { cleanTx } from "@andromedaprotocol/andromeda.js";
-import type { Attribute, Event, IndexedTx, SearchTxQuery } from "@cosmjs/stargate";
+import type {
+  Attribute,
+  Event,
+  IndexedTx,
+  SearchTxQuery,
+} from "@cosmjs/stargate";
 import { ProcessorFunc } from "../types";
 import _ from "lodash";
 import axios from "axios";
@@ -37,11 +42,15 @@ export default class Batcher {
     let done: boolean = false;
     let txsPage: number = 1;
     while (!done) {
-      let query = ("tags" in this.query ? this.query.tags : []).map(o => o.key + "='" + o.value + "'").join(" AND ");
+      let query = ("tags" in this.query ? this.query.tags : [])
+        .map((o) => o.key + "='" + o.value + "'")
+        .join(" AND ");
       if (this.label === "Instantiations")
-        query = "message.action='/cosmwasm.wasm.v1.MsgInstantiateContract'"
+        query = "message.action='/cosmwasm.wasm.v1.MsgInstantiateContract'";
 
-      const url = `${config!.chainUrl}tx_search?query="${query} AND tx.height>=${minHeight} AND tx.height<=${maxHeight}"&page=${txsPage}&per_page=100`;
+      const url = `${
+        config!.chainUrl
+      }tx_search?query="${query} AND tx.height>=${minHeight} AND tx.height<=${maxHeight}"&page=${txsPage}&per_page=100`;
 
       const dataTxs = await axios.get(url);
       txs.push(...(dataTxs?.data?.result?.txs ?? []));
@@ -50,11 +59,11 @@ export default class Batcher {
     }
     const resp = txs.map((tx: any) => {
       const wasm: {
-        type: string,
-        attributes: Attribute[]
+        type: string;
+        attributes: Attribute[];
       } = {
         type: "wasm",
-        attributes: []
+        attributes: [],
       };
       const events = tx.tx_result.events.filter((ev: Event) => {
         if (ev.type === "wasm") {
@@ -72,13 +81,15 @@ export default class Batcher {
         hash: tx.hash,
         height: Number(tx.height),
         events: events,
-        rawLog: JSON.stringify([{
-          msg_index: tx.index,
-          log: "",
-          events: events,
-        }]),
-        tx: new Uint8Array([])
-      }
+        rawLog: JSON.stringify([
+          {
+            msg_index: tx.index,
+            log: "",
+            events: events,
+          },
+        ]),
+        tx: new Uint8Array([]),
+      };
       return injTx;
     });
 
@@ -106,16 +117,15 @@ export default class Batcher {
   async start() {
     const currChainHeight =
       await this.client.chainClient!.queryClient?.getHeight();
-    
+
     const chainId = process.env.CHAIN_ID ?? "uni-6";
     console.log(
-      `[${chainId} - ${
-        this.label
-      }] Fetching transactions from height ${
-        this.currHeight
-      } to ${currChainHeight}`
+      `[${chainId} - ${this.label}] Fetching transactions from height ${this.currHeight} to ${currChainHeight}`
     );
-    const getTxsResp = (chainId === 'injective-888') ? await this.getInjectiveTxs(currChainHeight) : await this.getTxs();
+    const getTxsResp =
+      chainId === "injective-888"
+        ? await this.getInjectiveTxs(currChainHeight)
+        : await this.getTxs();
     const batch = (getTxsResp ?? []).map(cleanTx);
     await this.processor(batch);
     this.currHeight = currChainHeight ?? this.currHeight;
