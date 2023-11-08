@@ -33,9 +33,9 @@ export default class Batcher {
   }
 
   /**
-   * Get all Injective transactions between given heights using the query for the current batcher
+   * Get all Injective/Terra transactions between given heights using the query for the current batcher
    */
-  async getInjectiveTxs(currChainHeight: number | undefined) {
+  async getChainTxs(currChainHeight: number | undefined) {
     const minHeight = this.currHeight;
     const maxHeight = currChainHeight || Number.MAX_SAFE_INTEGER;
     const txs = [];
@@ -122,9 +122,10 @@ export default class Batcher {
     console.log(
       `[${chainId} - ${this.label}] Fetching transactions from height ${this.currHeight} to ${currChainHeight}`
     );
+    const CHAINS_USING_FETCH = ['pisco-1','injective-888'];
     const getTxsResp =
-      chainId === "injective-888"
-        ? await this.getInjectiveTxs(currChainHeight)
+      CHAINS_USING_FETCH.includes(chainId)
+        ? await this.getChainTxs(currChainHeight)
         : await this.getTxs();
     const batch = (getTxsResp ?? []).map(cleanTx);
     await this.processor(batch);
