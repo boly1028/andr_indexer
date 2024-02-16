@@ -8,6 +8,8 @@ import queries from "./queries";
 import { sleep } from "./utils";
 import express from "express";
 import { createServer } from "http";
+import { configDotenv } from "dotenv";
+configDotenv();
 
 require("./sentry");
 
@@ -44,48 +46,74 @@ interface ChainInfo {
 }
 
 const CHAIN_INFO: ChainInfo[] = [
-  { chainId: "uni-6", startHeight: 0 },
-  { chainId: "elgafar-1", startHeight: 0 },
-  { chainId: "galileo-3", startHeight: 0 },
-  { chainId: "pisco-1", startHeight: 0 },
-  { chainId: "constantine-3", startHeight: 0 },
+  // { chainId: "uni-6", startHeight: 0 },
+  // { chainId: "elgafar-1", startHeight: 0 },
+  // { chainId: "galileo-3", startHeight: 0 },
+  // { chainId: "pisco-1", startHeight: 0 },
+  // { chainId: "constantine-3", startHeight: 0 },
   { chainId: "injective-888", startHeight: 0 },
 ];
 
 const port = process.env.PORT || 4000;
 const gqlURL = process.env.GQL_URL || "http://0.0.0.0:8085/graphql";
 
-if (cluster.isPrimary) {
-  console.log(`Primary ${process.pid} is running`);
+const main = async () => {
+  await dbConnect();
+  if (cluster.isPrimary) {
+    console.log(`Primary ${process.pid} is running`);
 
-  const app = express();
-  const router = express.Router();
-  router.use((req, res, next) => {
-    res.header("Access-Control-Allow-Methods", "GET");
-    next();
-  });
-  router.get("/health", (req, res) => {
-    res.status(200).send("Ok");
-  });
-  app.use("/api/v1/", router);
-
-  const server = createServer(app);
-  server.listen(port, () => {
-    console.log(`Server listening on port ${port}`);
-  });
-
-  CHAIN_INFO.forEach(({ chainId, startHeight }) => {
-    cluster.fork({
-      CHAIN_ID: chainId,
-      START_HEIGHT: startHeight,
-      GQL_URL: gqlURL,
+    const app = express();
+    const router = express.Router();
+    router.use((req, res, next) => {
+      res.header("Access-Control-Allow-Methods", "GET");
+      next();
     });
-  });
+    router.get("/health", (req, res) => {
+      res.status(200).send("Ok");
+    });
+    app.use("/api/v1/", router);
 
-  cluster.on("exit", (worker) => {
-    console.log(`worker ${worker.process.pid} died`);
-  });
-} else {
-  console.log(`Worker ${process.pid}-${process.env.CHAIN_ID} started`);
-  start();
+    const server = createServer(app);
+    server.listen(port, () => {
+      console.log(`Server listening on port ${port}`);
+    });
+
+    // Map from worker id to chainId
+    const CLUSTERS: Record<string, string> = {};
+    cluster.on("exit", (worker) => {
+      console.log(`WORKER ${CLUSTERS[worker.id]} ${worker.process.pid} died`);
+      delete CLUSTERS[worker.id];
+    });
+
+    // Keep on spinning new clusters for new chain or died clusters
+    while (true) {
+      console.log("Refreshing Chains");
+      const EXISTING_CLUSTERS = new Set(Object.values(CLUSTERS));
+      console.log("Existing Chains - ", EXISTING_CLUSTERS);
+      // const CHAINS = await getAllChains() || CHAIN_INFO;
+      const CHAINS = CHAIN_INFO;
+
+      CHAINS.forEach(({ chainId, startHeight }) => {
+        // Do not create cluster for existing chain
+        if (EXISTING_CLUSTERS.has(chainId)) return;
+        const worker = cluster.fork({
+          CHAIN_ID: chainId,
+          START_HEIGHT: Math.max(startHeight, 0),
+          GQL_URL: gqlURL,
+        });
+        CLUSTERS[worker.id] = chainId;
+      });
+      await sleep(10000)
+    }
+  } else {
+    try {
+      console.log(`Worker ${process.pid}-${process.env.CHAIN_ID} started`);
+      await start();
+    } catch (err) {
+      console.log(`Error from ${cluster.worker?.id}`, err);
+      process.exit(1);
+    }
+  }
 }
+
+main();

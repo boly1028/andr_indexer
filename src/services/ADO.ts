@@ -36,6 +36,10 @@ export const saveNewAdo = async (ado: any) => {
 }
 
 export const updateAdoOwner = async (data: any) => {
+  // console.log("******************");
+  // console.log("address: ", data.address);
+  // console.log("newOwner: ", data.newOwner);
+  // console.log("txHeight: ", data.txHeight);
   const ado = await adoModel.findOneAndUpdate(
     {
       $and: [{ address: data.address }, { lastUpdatedHeight: { $lt: data.txHeight } }],
@@ -43,7 +47,9 @@ export const updateAdoOwner = async (data: any) => {
     { $set: { owner: data.newOwner, lastUpdatedHeight: data.txHeight } },
     { new: true },
   );
-  if(!ado) return;
+  if (!ado) {
+    return;
+  }
 
   const mutation = gql`
   mutation UPDATE_ADO_OWNER($address: String!, $newOwner: String!, $txHeight: Int!) {

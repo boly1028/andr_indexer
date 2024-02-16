@@ -12,6 +12,8 @@ import {
   updateAdoOwner,
 } from "../services";
 import { TransactionError } from "../errors";
+import { configDotenv } from "dotenv";
+configDotenv();
 
 /**
  * Creates a new ADO object after checking that the ADO does not already exist in the DB

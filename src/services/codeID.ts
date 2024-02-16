@@ -1,4 +1,6 @@
 import { codeIDModel } from "../db";
+import { configDotenv } from "dotenv";
+configDotenv();
 
 export const createCodeIDBulkOp = () =>
   codeIDModel.collection.initializeOrderedBulkOp();

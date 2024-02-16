@@ -1,6 +1,8 @@
 import { CleanedTx, getAttribute } from "@andromedaprotocol/andromeda.js";
 import { Log } from "@cosmjs/stargate/build/logs";
 import { getCodeIDByType, newCodeId, updateCodeId } from "../services";
+import { configDotenv } from "dotenv";
+configDotenv();
 
 export function getCodeIDInfo(logs: readonly Log[]):
   | {
