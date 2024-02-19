@@ -20,18 +20,11 @@ export let config: ChainConfig;
 export async function connect() {
   console.info(clc.yellow("Andromeda Client connecting..."));
   config = await queryChainConfig(CHAIN_ID);
-  // console.log("chainConfig: ", config);
   const client = createClient(config.addressPrefix);
   if (!config) throw new Error("No config for provided chain ID");
   if (CHAIN_ID === "galileo-3") {
     config.chainUrl = "https://andromeda.rpc.t.anode.team/";
   }
-  if (CHAIN_ID === "injective-888") {
-    config.chainUrl = "https://injective-rpc.publicnode.com:443";
-  }
-  // if (CHAIN_ID === "elgafar-1") {
-  //   config.chainUrl = "https://stargaze-testnet-rpc.polkachu.com//";
-  // }
   await client.connect(
     config.chainUrl!,
     // config.kernelAddress!,

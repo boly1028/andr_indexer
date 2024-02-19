@@ -180,8 +180,7 @@ export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
             tx.hash,
             appContract
           );
-
-          if (component) await saveNewAdo(component)
+          if (component) await saveNewAdo(component);
         }
       }
     } catch (error) {

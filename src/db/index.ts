@@ -6,7 +6,7 @@ import { configDotenv } from "dotenv";
 configDotenv();
 
 const DB_URI =
-  process.env.DB_URI || "mongodb://localhost:27018/andromeda-indexer";
+  process.env.DB_URI || "mongodb://127.0.0.1:27017/andromeda-indexer";
 
 async function connect() {
   console.info(clc.yellow(`Connecting to Database: ${DB_URI}`));

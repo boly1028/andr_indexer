@@ -58,11 +58,6 @@ export default class Batcher {
       if (this.label === "Instantiations") {
         query = "message.action='/cosmwasm.wasm.v1.MsgInstantiateContract'";
       }
-
-      if (this.label === "Update Owner") {
-        query = "message.action='/cosmwasm.wasm.v1.MsgUpdateContractOwner'";
-      }
-
       const url = `${
         config!.chainUrl
       }tx_search?query="${query} AND tx.height>=${minHeight} AND tx.height<=${maxHeight}"&page=${txsPage}&per_page=100`;
@@ -148,14 +143,13 @@ export default class Batcher {
       `[${chainId} - ${this.label}] Fetching transactions from height ${minHeight} to ${maxHeight}`
     );
 
-    const CHAINS_USING_FETCH = ['pisco-1','injective-888'];
-    const getTxsResp =
-      CHAINS_USING_FETCH.includes(chainId)
-         ? await this.getChainTxs(maxHeight)
-         : await this.getTxs(maxHeight, minHeight);
+    // const CHAINS_USING_FETCH = ['pisco-1','injective-888'];
+    // const getTxsResp =
+    //   CHAINS_USING_FETCH.includes(chainId)
+    //     ? await this.getChainTxs(maxHeight)
+    //     : await this.getTxs(maxHeight, minHeight);
 
-    // const getTxsResp = await this.getTxs(maxHeight, minHeight);
-    // const getTxsResp = await this.getTxs();
+    const getTxsResp = await this.getTxs(maxHeight, minHeight);
 
     const batch = (getTxsResp ?? []).map(cleanTx);
     console.log(
