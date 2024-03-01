@@ -11,7 +11,6 @@ export const getADOByAddress = (address: string) => {
 
 export const saveNewAdo = async (ado: any) => {
   await adoModel.insertMany([ado]);
-  console.log(ado);
   const mutation = gql`
   mutation ADD_ADO($address: String!, $adoType: String!, $appContract: String, $chainId: String!, $instantiateHash: String!, $instantiateHeight: Int!, $lastUpdatedHash: String!, $lastUpdatedHeight: Int!, $minter: String, $name: String, $owner: String!) {
     addAdo(input: { address: $address, adoType: $adoType, appContract: $appContract, chainId: $chainId, instantiateHash: $instantiateHash, instantiateHeight: $instantiateHeight, lastUpdatedHash: $lastUpdatedHash, lastUpdatedHeight: $lastUpdatedHeight, minter: $minter, name: $name, owner: $owner}) {

@@ -1,8 +1,27 @@
 import mongoose, { Schema } from "mongoose";
 
+const IconUrl = {
+    sm: {
+        type: String,
+        rquired: true
+    },
+    lg: {
+        type: String,
+        rquired: true
+    },
+}
+
 // THESE SCHEMA ARE NOT TYPED TIGHTLY AND ASSUME THAT DATA IS ALWAYS CORRECT
 const SCHEMA = new Schema(
     {
+        name: {
+            type: String,
+            required: true,
+        },
+        chainName: {
+            type: String,
+            required: true,
+        },
         chainId: {
             type: String,
             required: true,
@@ -11,7 +30,7 @@ const SCHEMA = new Schema(
             type: String,
             required: true,
         },
-        kernelAddress: {
+        registryAddress: {
             type: String,
             required: true,
         },
@@ -23,16 +42,24 @@ const SCHEMA = new Schema(
             type: String,
             required: true,
         },
-        name: {
+        blockExplorerTxPages: {
+            type: [String],
+            required: true,
+        },
+        blockExplorerAddressPages: {
+            type: [String],
+            required: true,
+        },
+        chainType: {
             type: String,
             required: true,
         },
-        startHeight: {
-            type: Number,
+        iconUrls: {
+            type: IconUrl,
             required: true,
         },
-        relay: {
-            type: Boolean,
+        kernelAddress: {
+            type: String,
             required: true,
         },
     },
