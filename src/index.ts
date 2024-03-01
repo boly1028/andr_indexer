@@ -90,7 +90,6 @@ const main = async () => {
       console.log("Refreshing Chains");
       const EXISTING_CLUSTERS = new Set(Object.values(CLUSTERS));
       console.log("Existing Chains - ", EXISTING_CLUSTERS);
-      // const CHAINS = await getAllChains() || CHAIN_INFO;
       const CHAINS = CHAIN_INFO;
 
       CHAINS.forEach(({ chainId, startHeight }) => {
@@ -103,7 +102,8 @@ const main = async () => {
         });
         CLUSTERS[worker.id] = chainId;
       });
-      await sleep(10000)
+      const sleepTime = Number(process.env.SLEEP_TIME) || 10000;
+      await sleep(sleepTime);
     }
   } else {
     try {
