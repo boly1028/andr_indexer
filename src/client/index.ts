@@ -15,6 +15,9 @@ export const graphQLClient = new GraphQLClient(GQL_URL);
 
 export let config: ChainConfig;
 
+/**
+ * A function to connect Andromeda Client.
+ */
 export async function connect() {
   console.info(clc.yellow("Andromeda Client connecting..."));
   config = await queryChainConfig(CHAIN_ID);
