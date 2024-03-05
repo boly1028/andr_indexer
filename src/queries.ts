@@ -10,26 +10,26 @@ import { BatchQuery } from "./types";
  * All of the queries to be run across each chain
  */
 const queries: BatchQuery[] = [
-  // {
-  //   query: () => ([
-  //     {
-  //       key: "message.action",
-  //       value: "/cosmwasm.wasm.v1.MsgInstantiateContract",
-  //     },
-  //   ]),
-  //   processor: handleADOInstantiate,
-  //   label: "Instantiations",
-  // },
-  // {
-  //   query: () => ([
-  //     {
-  //       key: "wasm.action",
-  //       value: "update_owner",
-  //     },
-  //   ]),
-  //   processor: handleADOUpdateOwner,
-  //   label: "Update Owner",
-  // },
+  {
+    query: () => ([
+      {
+        key: "message.action",
+        value: "/cosmwasm.wasm.v1.MsgInstantiateContract",
+      },
+    ]),
+    processor: handleADOInstantiate,
+    label: "Instantiations",
+  },
+  {
+    query: () => ([
+      {
+        key: "wasm.action",
+        value: "update_owner",
+      },
+    ]),
+    processor: handleADOUpdateOwner,
+    label: "Update Owner",
+  },
   {
     query: async () => {
       const client = createClient(config.addressPrefix);
