@@ -47,9 +47,9 @@ interface ChainInfo {
 
 const CHAIN_INFO: ChainInfo[] = [
   // { chainId: "uni-6" },
-  // { chainId: "elgafar-1" },
+  { chainId: "elgafar-1" },
   // { chainId: "galileo-3" },
-  { chainId: "pisco-1" },
+  // { chainId: "pisco-1" },
   // { chainId: "constantine-3" },
   // { chainId: "injective-888" },
 ];
@@ -59,6 +59,10 @@ const gqlURL = process.env.GQL_URL || "http://0.0.0.0:8085/graphql";
 
 const main = async () => {
   await dbConnect();
+
+  // await indexingStatusModel.collection.drop();
+  // console.log("all collections are dropped.");
+
   if (cluster.isPrimary) {
     console.log(`Primary ${process.pid} is running`);
 

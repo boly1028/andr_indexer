@@ -30,7 +30,6 @@ export async function handleCodeIDLog(batch: readonly CleanedTx[], chainId: stri
     const tx = batch[i];
     const indexingType = 'add_update_code_ID';
     const codeIdInfo = getCodeIDInfo(tx.rawLog);
-    console.log("codeIdInfo: ", codeIdInfo);
     if (!codeIdInfo) continue;
     const { codeId, adoType } = codeIdInfo;
     const savedCodeId = await getCodeIDByType(adoType, chainId);
