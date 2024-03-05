@@ -1,6 +1,7 @@
 import { CleanedTx, getAttribute } from "@andromedaprotocol/andromeda.js";
 import { Log } from "@cosmjs/stargate/build/logs";
 import { getCodeIDByType, newCodeId, updateCodeId } from "../services";
+import { createOrUpdateIndexingStatus } from "../processors";
 import { configDotenv } from "dotenv";
 configDotenv();
 
@@ -24,13 +25,14 @@ export function getCodeIDInfo(logs: readonly Log[]):
   };
 }
 
-export async function handleCodeIDLog(batch: readonly CleanedTx[]) {
+export async function handleCodeIDLog(batch: readonly CleanedTx[], chainId: string) {
   for (let i = 0; i < batch.length; i++) {
     const tx = batch[i];
+    const indexingType = 'add_update_code_ID';
     const codeIdInfo = getCodeIDInfo(tx.rawLog);
+    console.log("codeIdInfo: ", codeIdInfo);
     if (!codeIdInfo) continue;
     const { codeId, adoType } = codeIdInfo;
-    const chainId = process.env.CHAIN_ID ?? "uni-5";
     const savedCodeId = await getCodeIDByType(adoType, chainId);
     if (savedCodeId) {
       if (savedCodeId.toJSON().lastUpdatedHeight < tx.height) {
@@ -39,5 +41,6 @@ export async function handleCodeIDLog(batch: readonly CleanedTx[]) {
     } else {
       await newCodeId(adoType, codeId, tx.hash, tx.height);
     }
+    await createOrUpdateIndexingStatus(chainId, indexingType, tx.height);
   }
 }

@@ -4,7 +4,9 @@ import type {
   SearchTxQuery,
 } from "@cosmjs/stargate";
 import { ProcessorFunc } from "../types";
+import { indexingStatusModel } from "../db";
 import { configDotenv } from "dotenv";
+import { chain } from "lodash";
 configDotenv();
 
 /**
@@ -57,11 +59,27 @@ export default class Batcher {
    * @returns
    */
   async start() {
-    const minHeight = this.currHeight;
-    const maxHeight = await this.client.queryClient?.getHeight() ?? 0;
+    const chainId = this.chainId;
+    let indexingType: string;
+    if (this.label == 'Instantiations') {
+      indexingType = 'instantiations';
+    } else if (this.label == 'Update Owner') {
+      indexingType = 'update_owner';
+    } else {
+      indexingType = 'add_update_code_ID';
+    }
 
+    let minHeight: number;
+    let maxHeight = await this.client.queryClient?.getHeight() ?? 0;
 
-    const chainId = process.env.CHAIN_ID ?? "uni-6";
+    const indexingStatus = await indexingStatusModel.findOne({ chainId: chainId, indexingType: indexingType });
+    
+    if (indexingStatus) {
+      minHeight = indexingStatus?.latestHeight + 1;
+    } else {
+      minHeight = this.currHeight;
+    }
+
     console.log(
       `[${chainId} - ${this.label}] Fetching transactions from height ${minHeight} to ${maxHeight}`
     );
@@ -72,7 +90,7 @@ export default class Batcher {
     console.log(
       `[${chainId} - ${this.label}] Total TX found: ${getTxsResp?.length}`
     );
-    await this.processor(batch);
+    await this.processor(batch, chainId);
     this.currHeight = maxHeight;
   }
 }

@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 import clc from "cli-color";
 export * from "./ADO";
 export * from "./CodeID";
+export * from "./Config";
+export * from "./Status";
 import { configDotenv } from "dotenv";
 configDotenv();
 
@@ -15,6 +17,8 @@ async function connect() {
 
   require("./ADO");
   require("./CodeID");
+  require("./Config");
+  require("./Status");
 }
 
 export default connect;

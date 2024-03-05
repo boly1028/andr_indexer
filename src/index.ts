@@ -8,6 +8,7 @@ import queries from "./queries";
 import { sleep } from "./utils";
 import express from "express";
 import { createServer } from "http";
+import { indexingStatusModel } from "./db";
 import { configDotenv } from "dotenv";
 configDotenv();
 
@@ -42,16 +43,15 @@ async function start() {
 
 interface ChainInfo {
   chainId: string;
-  startHeight: number;
 }
 
 const CHAIN_INFO: ChainInfo[] = [
-  { chainId: "uni-6", startHeight: 0 },
-  { chainId: "elgafar-1", startHeight: 0 },
-  { chainId: "galileo-3", startHeight: 0 },
-  { chainId: "pisco-1", startHeight: 0 },
-  { chainId: "constantine-3", startHeight: 0 },
-  { chainId: "injective-888", startHeight: 0 },
+  // { chainId: "uni-6" },
+  // { chainId: "elgafar-1" },
+  // { chainId: "galileo-3" },
+  { chainId: "pisco-1" },
+  // { chainId: "constantine-3" },
+  // { chainId: "injective-888" },
 ];
 
 const port = process.env.PORT || 4000;
@@ -92,12 +92,12 @@ const main = async () => {
       console.log("Existing Chains - ", EXISTING_CLUSTERS);
       const CHAINS = CHAIN_INFO;
 
-      CHAINS.forEach(({ chainId, startHeight }) => {
+      CHAINS.forEach(({ chainId }) => {
         // Do not create cluster for existing chain
         if (EXISTING_CLUSTERS.has(chainId)) return;
         const worker = cluster.fork({
           CHAIN_ID: chainId,
-          START_HEIGHT: Math.max(startHeight, 0),
+          START_HEIGHT: 0,
           GQL_URL: gqlURL,
         });
         CLUSTERS[worker.id] = chainId;

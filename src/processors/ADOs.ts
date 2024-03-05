@@ -5,7 +5,6 @@ import {
 } from "@andromedaprotocol/andromeda.js";
 import { Log } from "@cosmjs/stargate/build/logs";
 import {
-  createADOBulkOperation,
   getADOByAddress,
   saveNewAdo,
   splitAttributesByKey,
@@ -14,6 +13,7 @@ import {
 import { TransactionError } from "../errors";
 import { configDotenv } from "dotenv";
 configDotenv();
+import { createOrUpdateIndexingStatus } from "../processors";
 
 /**
  * Creates a new ADO object after checking that the ADO does not already exist in the DB
@@ -140,8 +140,10 @@ export function getInstantiateInfo(logs: readonly Log[]): {
   const [senderAttr] = getAttribute("message.sender", logs);
   const [minterAttr] = getAttribute("wasm.minter", logs);
   const [appNameAttr] = getAttribute("wasm.andr_app", logs);
-  if (!ownerAttr && !senderAttr)
+  if (!ownerAttr && !senderAttr) {
+    console.log("no Owner or no Sender.");
     throw new Error("Instantiation did not include an owner");
+  }
 
   return {
     address: addressAttr.value,
@@ -156,7 +158,8 @@ export function getInstantiateInfo(logs: readonly Log[]): {
  * A handler function for the ADO instantiation query, sifts through transactions to find ADO instantiations before adding them to the DB
  * @param batch
  */
-export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
+export async function handleADOInstantiate(batch: readonly CleanedTx[], chainId: string) {
+  const indexingType = 'instantiations';
   for (let i = 0; i < batch.length; i++) {
     const tx = batch[i];
 
@@ -183,6 +186,8 @@ export async function handleADOInstantiate(batch: readonly CleanedTx[]) {
           if (component) await saveNewAdo(component);
         }
       }
+
+      await createOrUpdateIndexingStatus(chainId, indexingType, tx.height);
     } catch (error) {
       const { message } = error as Error;
       if (!message.includes("Not an")) {
@@ -243,7 +248,8 @@ export function getUpdateOwnerLogs(logs: readonly Log[]): UpdateOwnerInfo[] {
  * A handler function for any ownership updates, sifts through transactions to find ownership updates before updating them in the DB
  * @param batch
  */
-export async function handleADOUpdateOwner(batch: readonly CleanedTx[]) {
+export async function handleADOUpdateOwner(batch: readonly CleanedTx[], chainId: string) {
+  const indexingType = 'update_owner';
   for (let i = 0; i < batch.length; i++) {
     const tx = batch[i];
 
@@ -255,6 +261,8 @@ export async function handleADOUpdateOwner(batch: readonly CleanedTx[]) {
           newOwner,
           txHeight: tx.height
         });
+
+        await createOrUpdateIndexingStatus(chainId, indexingType, tx.height);
       } catch (error) {
         const { message } = error as Error;
         if (!message.includes("Error executing mongo db update ADO")) {
