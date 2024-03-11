@@ -147,8 +147,10 @@ export default class Batcher {
       indexingType = 'update_owner';
     } else if (this.label == 'Update Code IDs') {
       indexingType = 'add_update_code_ID';
+    } else if (this.label == 'Accept Ownership') {
+      indexingType = 'accept_ownership';
     } else {
-      indexingType = 'accept_ownership'
+      indexingType = 'Revoke Ownership Offer';
     }
 
     let minHeight: number;

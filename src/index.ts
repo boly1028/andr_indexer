@@ -8,7 +8,7 @@ import queries from "./queries";
 import { sleep } from "./utils";
 import express from "express";
 import { createServer } from "http";
-import { indexingStatusModel } from "./db";
+import { indexingStatusModel, ConfigModel, AcceptOwnershipModel } from "./db";
 import { configDotenv } from "dotenv";
 configDotenv();
 
@@ -61,6 +61,7 @@ const main = async () => {
   await dbConnect();
 
   await indexingStatusModel.collection.drop();
+  await AcceptOwnershipModel.collection.drop();
   console.log("all collections are dropped.");
 
   if (cluster.isPrimary) {

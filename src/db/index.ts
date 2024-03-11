@@ -7,7 +7,8 @@ export * from "./ADO";
 export * from "./CodeID";
 export * from "./Config";
 export * from "./Status";
-export * from "./Ownership";
+export * from "./AcceptOwnership";
+export * from "./RevokeOwnershipOffer";
 
 const DB_URI =
   process.env.DB_URI || "mongodb://127.0.0.1:27017/andromeda-indexer";
@@ -21,7 +22,8 @@ async function connect() {
   require("./CodeID");
   require("./Config");
   require("./Status");
-  require("./Ownership");
+  require("./AcceptOwnership");
+  require("./RevokeOwnershipOffer");
 }
 
 export default connect;

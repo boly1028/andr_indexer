@@ -261,8 +261,6 @@ export async function handleADOUpdateOwner(batch: readonly CleanedTx[], chainId:
           newOwner,
           txHeight: tx.height
         });
-
-        await createOrUpdateIndexingStatus(chainId, indexingType, tx.height);
       } catch (error) {
         const { message } = error as Error;
         if (!message.includes("Error executing mongo db update ADO")) {
@@ -270,5 +268,6 @@ export async function handleADOUpdateOwner(batch: readonly CleanedTx[], chainId:
         }
       }
     });
+    await createOrUpdateIndexingStatus(chainId, indexingType, tx.height);
   }
 }

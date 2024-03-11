@@ -28,4 +28,4 @@ export async function createOrUpdateIndexingStatus(chainId: string, indexingType
 
 export * from "./ADOs";
 export * from "./codeID";
-export * from "./acceptOwnership";
+export * from "./ownership";
