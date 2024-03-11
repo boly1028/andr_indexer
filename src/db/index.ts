@@ -1,11 +1,13 @@
 import mongoose from "mongoose";
 import clc from "cli-color";
+import { configDotenv } from "dotenv";
+configDotenv();
+
 export * from "./ADO";
 export * from "./CodeID";
 export * from "./Config";
 export * from "./Status";
-import { configDotenv } from "dotenv";
-configDotenv();
+export * from "./Ownership";
 
 const DB_URI =
   process.env.DB_URI || "mongodb://127.0.0.1:27017/andromeda-indexer";
@@ -19,6 +21,7 @@ async function connect() {
   require("./CodeID");
   require("./Config");
   require("./Status");
+  require("./Ownership");
 }
 
 export default connect;

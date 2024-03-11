@@ -145,8 +145,10 @@ export default class Batcher {
       indexingType = 'instantiations';
     } else if (this.label == 'Update Owner') {
       indexingType = 'update_owner';
-    } else {
+    } else if (this.label == 'Update Code IDs') {
       indexingType = 'add_update_code_ID';
+    } else {
+      indexingType = 'accept_ownership'
     }
 
     let minHeight: number;

@@ -3,3 +3,4 @@
 export * from "./ADO";
 export * from "./codeID";
 export * from "./logs";
+export * from "./ownership";

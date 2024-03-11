@@ -3,6 +3,7 @@ import {
   handleADOInstantiate,
   handleADOUpdateOwner,
   handleCodeIDLog,
+  handleAcceptOwnership,
 } from "./processors";
 import createClient from "@andromedaprotocol/andromeda.js/dist/clients";
 import { BatchQuery } from "./types";
@@ -31,27 +32,24 @@ const queries: BatchQuery[] = [
     label: "Update Owner",
   },
   {
-    query: async () => {
-      const client = createClient(config.addressPrefix);
-      await client.connect(
-        config!.chainUrl,
-      );
-      return config!.chainId === "elgafar-1"
-        ? [
-          {
-            key: "wasm.action",
-            value: "add_update_code_id",
-          },
-        ]
-        : [
-          {
-            key: "wasm.action",
-            value: "add_update_code_id",
-          },
-        ]
-    },
+    query: () => ([
+      {
+        key: "wasm.action",
+        value: "add_update_code_id",
+      },
+    ]),
     processor: handleCodeIDLog,
     label: "Update Code IDs",
+  },
+  {
+    query: () => ([
+      {
+        key: "wasm.action",
+        value: "accept_ownership",
+      },
+    ]),
+    processor: handleAcceptOwnership,
+    label: "Accept Ownership",
   },
 ];
 

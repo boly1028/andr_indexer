@@ -19,7 +19,7 @@ export const newCodeId = async (
     codeId,
     lastUpdatedHash: txHash,
     lastUpdatedHeight: blockHeight,
-    chainId: process.env.CHAIN_ID ?? "uni-5",
+    chainId: process.env.CHAIN_ID ?? "uni-6",
   });
 
 export const updateCodeId = async (
@@ -29,7 +29,7 @@ export const updateCodeId = async (
   blockHeight: number
 ) =>
   await codeIDModel.updateOne(
-    { adoType, chainId: process.env.CHAIN_ID ?? "uni-5" },
+    { adoType, chainId: process.env.CHAIN_ID ?? "uni-6" },
     {
       $set: {
         codeId: newCodeId,
