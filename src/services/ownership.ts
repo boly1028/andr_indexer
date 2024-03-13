@@ -1,4 +1,4 @@
-import { AcceptOwnershipModel, RevokeOwnershipOfferModel } from "../db";
+import { AcceptOwnershipModel, RevokeOwnershipOfferModel, UpdateOwnershipModel } from "../db";
 import { configDotenv } from "dotenv";
 configDotenv();
 
@@ -77,3 +77,43 @@ export const updateRevokeOwnershipOffer = async(
     },
   }
 );
+
+export const newUpdateOwnership = async (
+  adoType: string,
+  address: string,
+  sender: string,
+  newOwner: string,
+  txHeight: number,
+  txHash: string
+) => await UpdateOwnershipModel.collection.insertOne({
+  chainId: process.env.CHAIN_ID ?? "uni-6",
+  adoType,
+  address,
+  sender,
+  newOwner,
+  lastUpdatedHeight: txHeight,
+  lastUpdatedHash: txHash
+});
+
+export const updateUpdateOwnership = async(
+  address: string,
+  newSender: string,
+  newOwner: string,
+  txHash: string,
+  txHeight: number
+) => await UpdateOwnershipModel.updateOne(
+  { address, chainId: process.env.CHAIN_ID ?? "uni-6" },
+  {
+    $set: {
+      sender: newSender,
+      newOwner,
+      lastUpdatedHash: txHash,
+      lastUpdatedHeight: txHeight,
+    },
+  }
+);
+
+export const getUpdateOwnershipByAddress = async (
+  chainId: string,
+  address: string
+) => await UpdateOwnershipModel.findOne({ chainId, address });

@@ -1,4 +1,4 @@
-import { adoModel } from "../db";
+import { adoModel, UpdateOwnershipModel } from "../db";
 import { gql } from 'graphql-request';
 import { graphQLClient } from "../client";
 
@@ -61,6 +61,78 @@ export const updateAdoOwner = async (data: any) => {
   };
 
   return await graphQLClient.request(mutation, variables);
+}
+
+export const updateAdoAcceptOwnership = async (address: string, sender: string, txHash: string, txHeight: number) => {
+  const ado = await adoModel.findOne({ address });
+  if (!ado) return;
+
+  if (!ado.acceptOwnership) {
+    await adoModel.findOneAndUpdate(
+      { address },
+      {
+        $set: {
+          acceptOwnership: {
+            sender: sender,
+            lastUpdatedHeight: txHeight,
+            lastUpdatedHash: txHash,
+          }
+        }
+      },
+      { new: true },
+    );
+  } else {
+    if (ado.acceptOwnership.lastUpdatedHeight < txHeight) {
+      await adoModel.findOneAndUpdate(
+        { address },
+        {
+          $set: {
+            acceptOwnership: {
+              sender: sender,
+              lastUpdatedHeight: txHeight,
+              lastUpdatedHash: txHash,
+            }
+          }
+        },
+      );
+    }
+  }
+}
+
+export const updateAdoRevokeOwnershipOffer = async (address: string, sender: string, txHash: string, txHeight: number) => {
+  const ado = await adoModel.findOne({ address });
+  if (!ado) return;
+
+  if (!ado.revokeOwnershipOffer) {
+    await adoModel.findOneAndUpdate(
+      { address },
+      {
+        $set: {
+          revokeOwnershipOffer: {
+            sender: sender,
+            lastUpdatedHeight: txHeight,
+            lastUpdatedHash: txHash,
+          }
+        }
+      },
+      { new: true },
+    );
+  } else {
+    if (ado.revokeOwnershipOffer.lastUpdatedHeight < txHeight) {
+      await adoModel.findOneAndUpdate(
+        { address },
+        {
+          $set: {
+            revokeOwnershipOffer: {
+              sender: sender,
+              lastUpdatedHeight: txHeight,
+              lastUpdatedHash: txHash,
+            }
+          }
+        },
+      );
+    }
+  }
 }
 
 export const updateAdo = async (address: string, data: any) => await adoModel.findOneAndUpdate({ address }, data);

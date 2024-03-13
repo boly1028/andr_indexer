@@ -8,7 +8,7 @@ import queries from "./queries";
 import { sleep } from "./utils";
 import express from "express";
 import { createServer } from "http";
-import { indexingStatusModel, ConfigModel, AcceptOwnershipModel } from "./db";
+import { indexingStatusModel, ConfigModel, AcceptOwnershipModel, adoModel, RevokeOwnershipOfferModel, UpdateOwnershipModel } from "./db";
 import { configDotenv } from "dotenv";
 configDotenv();
 
@@ -60,8 +60,11 @@ const gqlURL = process.env.GQL_URL || "http://0.0.0.0:8085/graphql";
 const main = async () => {
   await dbConnect();
 
+  await adoModel.collection.drop();
   await indexingStatusModel.collection.drop();
   await AcceptOwnershipModel.collection.drop();
+  await RevokeOwnershipOfferModel.collection.drop();
+  await UpdateOwnershipModel.collection.drop();
   console.log("all collections are dropped.");
 
   if (cluster.isPrimary) {

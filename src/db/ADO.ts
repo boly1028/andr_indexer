@@ -1,4 +1,6 @@
 import mongoose, { Schema } from "mongoose";
+import { acceptOwnership } from "./AcceptOwnership";
+import { revokeOwnershipOffer } from "./RevokeOwnershipOffer";
 
 const ADO = new Schema({
   adoType: {
@@ -42,7 +44,13 @@ const ADO = new Schema({
   },
   minter: {
     type: String,
-  }
+  },
+  acceptOwnership: {
+    type: acceptOwnership,
+  },
+  revokeOwnershipOffer: {
+    type: revokeOwnershipOffer,
+  },
 });
 
 export const adoModel = mongoose.model("ADO", ADO);

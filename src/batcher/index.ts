@@ -68,6 +68,7 @@ export default class Batcher {
     }
 
     const resp = txs.map((tx: any) => {
+      // console.log("TX: ", tx.tx);
       const wasm: {
         type: string;
         attributes: Attribute[];
@@ -168,8 +169,8 @@ export default class Batcher {
       `[${chainId} - ${this.label}] Fetching transactions from height ${minHeight} to ${maxHeight}`
     );
 
-    const getTxsResp = await this.getTxsPaginate(maxHeight, minHeight);
-    // const getTxsResp = await this.getTxs(maxHeight, minHeight);
+    // const getTxsResp = await this.getTxsPaginate(maxHeight, minHeight);
+    const getTxsResp = await this.getTxs(maxHeight, minHeight);
 
     const batch = (getTxsResp ?? []).map(cleanTx);
     console.log(

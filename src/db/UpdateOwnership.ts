@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-export const acceptOwnership = new Schema({
+export const updateOwnership = new Schema({
   chainId: {
     type: String,
   },
@@ -10,12 +10,12 @@ export const acceptOwnership = new Schema({
   address: {
     type: String,
   },
-  action: {
-    type: String,
-  },
   sender: {
     type: String,
     required: true,
+  },
+  newOwner: {
+    type: String,
   },
   lastUpdatedHeight: {
     type: Number,
@@ -27,6 +27,6 @@ export const acceptOwnership = new Schema({
   },
 });
 
-export const AcceptOwnershipModel = mongoose.model("acceptOwnership", acceptOwnership);
+export const UpdateOwnershipModel = mongoose.model("updateOwnership", updateOwnership);
 
-export default AcceptOwnershipModel;
+export default UpdateOwnershipModel;

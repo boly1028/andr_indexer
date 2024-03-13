@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-const revokeOwnershipOffer = new Schema({
+export const revokeOwnershipOffer = new Schema({
   chainId: {
     type: String,
     required: true,

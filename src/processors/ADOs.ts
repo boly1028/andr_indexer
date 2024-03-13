@@ -9,11 +9,16 @@ import {
   saveNewAdo,
   splitAttributesByKey,
   updateAdoOwner,
+  newUpdateOwnership,
+  getUpdateOwnershipByAddress,
+  updateUpdateOwnership,
 } from "../services";
 import { TransactionError } from "../errors";
 import { configDotenv } from "dotenv";
 configDotenv();
 import { createOrUpdateIndexingStatus } from "../processors";
+import { getMsgInfo } from "../utils";
+import { getUpdateOwnershipInfo } from "./ownership";
 
 /**
  * Creates a new ADO object after checking that the ADO does not already exist in the DB
@@ -212,33 +217,41 @@ export function getUpdateOwnerLogs(logs: readonly Log[]): UpdateOwnerInfo[] {
 
   for (let i = 0; i < logs.length; i++) {
     const log = logs[i];
-    const wasm = log.events.find((ev) => ev.type === "wasm");
-    if (!wasm) continue;
+    // const wasm = log.events.find((ev) => ev.type === "wasm");
+    const wasms = log.events.filter((ev) => ev.type === "wasm");
+    if (!wasms) continue;
 
-    // Attributes are split in to sections, each beginning with the contract address
-    const attrSlices = splitAttributesByKey("_contract_address", wasm);
-    // Each slice may contain info about a contract updating ownership
-    attrSlices.forEach((attrs) => {
-      const contractAddrAttr = attrs.find(
-        (attr) => attr.key === "_contract_address"
-      );
-      if (!contractAddrAttr) return;
+    wasms.forEach((wasm) => {
+      // Attributes are split in to sections, each beginning with the contract address
+      const attrSlices = splitAttributesByKey("_contract_address", wasm);
+      console.log("attrSlices: ", attrSlices);
+      // Each slice may contain info about a contract updating ownership
+      attrSlices.forEach((attrs) => {
+        const contractAddrAttr = attrs.find(
+          (attr) => attr.key === "_contract_address"
+        );
+        if (!contractAddrAttr) return;
 
-      //Find the update owner action index
-      const actionIdx = attrs.findIndex(
-        ({ key, value }) => key === "action" && value === "update_owner"
-      );
+        //Find the update owner action index
+        const actionIdx = attrs.findIndex(
+          ({ key, value }) => key === "action" && value === "update_owner"
+        );
 
-      if (typeof actionIdx !== "undefined" && actionIdx >= 0) {
-        // The next attribute is always the value of the new owner
-        const valueAttr = attrs[actionIdx + 1];
-        if (!valueAttr || valueAttr.key !== "value") {
-          return;
+        if (!actionIdx) return;
+
+        if (typeof actionIdx !== "undefined" && actionIdx >= 0) {
+          // The next attribute is always the value of the new owner
+          const valueAttr = attrs[actionIdx + 1];
+          if (!valueAttr || valueAttr.key !== "value") {
+            return;
+          }
+          const { value: newOwner } = valueAttr;
+          updates.push({ contractAddress: contractAddrAttr.value, newOwner });
         }
-        const { value: newOwner } = valueAttr;
-        updates.push({ contractAddress: contractAddrAttr.value, newOwner });
-      }
+      });
     });
+
+    
   }
 
   return updates;
@@ -252,15 +265,43 @@ export async function handleADOUpdateOwner(batch: readonly CleanedTx[], chainId:
   const indexingType = 'update_owner';
   for (let i = 0; i < batch.length; i++) {
     const tx = batch[i];
+    console.log("HEIGHT: ", tx.height);
+    const messages: any[] = tx.tx.body.messages;
+    const value = messages[0].value;
+    const textDecoder = new TextDecoder();
+    const decodedString = textDecoder.decode(value);
+    const msgObj = JSON.parse(getMsgInfo(decodedString));
+    console.log("MSG: ", msgObj);
 
     const updates = getUpdateOwnerLogs(tx.rawLog);
+    console.log("updates: ", updates);
+
     updates.forEach(async ({ contractAddress, newOwner }) => {
       try {
-        await updateAdoOwner({
-          address: contractAddress,
-          newOwner,
-          txHeight: tx.height
-        });
+        const msgKey = Object.keys(msgObj)[0];
+        if (msgKey === "update_owner") {
+          await updateAdoOwner({
+            address: contractAddress,
+            newOwner,
+            txHeight: tx.height
+          }); 
+        }
+        if (msgKey === "ownership") {
+          console.log("OwnerShip: ", msgObj.ownership.update_owner.expiration);
+          const updateOwnershipInfo = await getUpdateOwnershipInfo(tx.rawLog);
+          console.log("updateOwnershipInfo: ", updateOwnershipInfo);
+          if (!updateOwnershipInfo) return;
+
+          const { adoType, address, sender, newOwner } = updateOwnershipInfo;
+          const chainId = process.env.CHAIN_ID ?? "uni-6";
+          const savedUpdateOwnership = await getUpdateOwnershipByAddress(chainId, address);
+          if (savedUpdateOwnership) {
+            if (savedUpdateOwnership.toJSON().lastUpdatedHeight < tx.height)
+              await updateUpdateOwnership(address, sender, newOwner, tx.hash, tx.height);
+          } else {
+            await newUpdateOwnership(adoType, address, sender, newOwner, tx.height, tx.hash);
+          }
+        }
       } catch (error) {
         const { message } = error as Error;
         if (!message.includes("Error executing mongo db update ADO")) {
