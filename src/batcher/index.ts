@@ -176,7 +176,8 @@ export default class Batcher {
     console.log(
       `[${chainId} - ${this.label}] Total TX found: ${getTxsResp?.length}`
     );
-    await this.processor(batch, chainId);
+    await this.processor(batch, chainId, maxHeight);
     this.currHeight = maxHeight;
+    if(indexingType == "accept_ownership") this.currHeight = 0;
   }
 }

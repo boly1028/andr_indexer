@@ -40,7 +40,7 @@ export const updateAdoOwner = async (data: any) => {
     {
       $and: [{ address: data.address }, { lastUpdatedHeight: { $lt: data.txHeight } }],
     },
-    { $set: { owner: data.newOwner, lastUpdatedHeight: data.txHeight } },
+    { $set: { owner: data.newOwner, lastUpdatedHeight: data.txHeight, lastUpdatedHash: data.txHash } },
     { new: true },
   );
   if (!ado) {

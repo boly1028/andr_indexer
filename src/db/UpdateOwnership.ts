@@ -17,6 +17,17 @@ export const updateOwnership = new Schema({
   newOwner: {
     type: String,
   },
+  expiration: {
+    at_height: {
+      type: Number,
+    },
+    at_time: {
+      type: Number,
+    },
+    never: {
+      type: Object,
+    }
+  },
   lastUpdatedHeight: {
     type: Number,
     required: true,

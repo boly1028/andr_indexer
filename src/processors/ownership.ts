@@ -1,4 +1,5 @@
 import { CleanedTx, getAttribute } from "@andromedaprotocol/andromeda.js";
+import { connect } from "../client";
 import { Log } from "@cosmjs/stargate/build/logs";
 import {
   getAcceptOwnershipByAddress,
@@ -64,8 +65,10 @@ export async function getAcceptOwnershipInfo(logs: readonly Log[]) {
   };
 }
 
-export async function handleAcceptOwnership(batch: readonly CleanedTx[]) {
+export async function handleAcceptOwnership(batch: readonly CleanedTx[], chainId: string, maxHeight: number) {
+  const currentChainHeight = maxHeight;
   for (let i = 0; i < batch.length; i++) {
+    console.log("height: ", maxHeight);
     const tx = batch[i];
     const indexingType = 'accept_ownership';
     const acceptOwnershipInfo = await getAcceptOwnershipInfo(tx.rawLog);
@@ -73,55 +76,64 @@ export async function handleAcceptOwnership(batch: readonly CleanedTx[]) {
 
     const { adoType, address, action, sender } = acceptOwnershipInfo;
     const chainId = process.env.CHAIN_ID ?? "uni-6";
+
     const savedAcceptOwnership = await getAcceptOwnershipByAddress(chainId, address);
+
     if (savedAcceptOwnership) {
       if (savedAcceptOwnership.toJSON().lastUpdatedHeight < tx.height) {
         await updateAcceptOwnership(address, sender, tx.hash, tx.height);
         await updateAdoAcceptOwnership(address, sender, tx.hash, tx.height);
-
-        console.log("address: ", address);
-        console.log("sender: ", sender);
-        console.log("height: ", tx.height);
-
-        const savedUpdateOwnership = await UpdateOwnershipModel.findOne({ address });
-        console.log("savedUpdateOwnership: ", savedUpdateOwnership);
-        if (savedUpdateOwnership && savedUpdateOwnership.newOwner == sender) {
-          if (tx.height > savedUpdateOwnership.lastUpdatedHeight) {
-            const newOwner = savedUpdateOwnership?.newOwner; 
-            console.log("newOwner: ", newOwner);
-            await updateAdoOwner({
-              address: address,
-              newOwner,
-              txHeight: tx.height
-            });
-            console.log("*****");
-          }
-        }
       }
     } else {
       await newAcceptOwnership(adoType, address, action, sender, tx.height, tx.hash);
       await updateAdoAcceptOwnership(address, sender, tx.hash, tx.height);
+    }
+    
+    const savedUpdateOwnership = await UpdateOwnershipModel.findOne({ address, newOwner: sender });
 
-      console.log("address: ", address);
-      console.log("sender: ", sender);
-      console.log("height: ", tx.height);
+    if (savedUpdateOwnership && savedUpdateOwnership.newOwner == sender) {
+      if (tx.height > savedUpdateOwnership.lastUpdatedHeight) {
+        const expiration: any = savedUpdateOwnership.expiration;
+        const newOwner = savedUpdateOwnership?.newOwner;
 
-      const savedUpdateOwnership = await UpdateOwnershipModel.findOne({ address, sender });
-      console.log("savedUpdateOwnership: ", savedUpdateOwnership);
-      if (savedUpdateOwnership) {
-        if (tx.height > savedUpdateOwnership.lastUpdatedHeight) {
-          const newOwner = savedUpdateOwnership?.newOwner;
-          console.log("newOwner___: ", newOwner);
+        const keys = Object.keys(expiration);
+        let expirationKey;
+        let expirationValue: any = undefined;
+
+        keys.find(key => {
+          expirationValue = expiration[key];
+          if (expirationValue !== undefined) {
+            expirationKey = key;
+            return true; // exits the loop
+          }
+          return false; // continue the loop
+        });
+
+        // console.log("expirationKey: ", expirationKey);
+        // console.log("expirationValue: ", expirationValue);
+
+        if (!expirationKey) {
           await updateAdoOwner({
             address: address,
             newOwner,
-            txHeight: tx.height
+            txHeight: tx.height,
+            txHash: tx.hash,
           }); 
-          console.log("_____");
+          // console.log("*****");
+        } else if (expirationKey == "at_height") {
+          if(currentChainHeight > expirationValue) 
+            await updateAdoOwner({
+              address: address,
+              newOwner,
+              txHeight: tx.height,
+              txHash: tx.hash,
+            }); 
+        } else if (expirationKey == "at_time") {
+          
         }
       }
     }
-    await createOrUpdateIndexingStatus(chainId, indexingType, tx.height);
+    // await createOrUpdateIndexingStatus(chainId, indexingType, tx.height);
   }
 }
 
@@ -168,6 +180,17 @@ export async function handleRevokeOwnershipOffer(batch: readonly CleanedTx[]) {
       await newRevokeOwnershipOffer(adoType, address, action, sender, tx.height, tx.hash);
       await updateAdoRevokeOwnershipOffer(address, sender, tx.hash, tx.height);
     }
+
+    const savedUpdateOwnership = await UpdateOwnershipModel.findOne({ address, sender });
+
+    if (savedUpdateOwnership && savedUpdateOwnership.sender == sender) {
+      if (tx.height > savedUpdateOwnership.lastUpdatedHeight) {
+        const elementToDelete = await UpdateOwnershipModel.findOneAndDelete({ address, sender });
+        // console.log("address: ", address);
+        // console.log("elementToDelete: ", elementToDelete);
+      }
+    }
+    
     await createOrUpdateIndexingStatus(chainId, indexingType, tx.height);
   }
 }

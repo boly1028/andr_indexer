@@ -83,30 +83,34 @@ export const newUpdateOwnership = async (
   address: string,
   sender: string,
   newOwner: string,
+  expiration: any,
   txHeight: number,
-  txHash: string
+  txHash: string,
 ) => await UpdateOwnershipModel.collection.insertOne({
   chainId: process.env.CHAIN_ID ?? "uni-6",
   adoType,
   address,
   sender,
   newOwner,
+  expiration,
   lastUpdatedHeight: txHeight,
   lastUpdatedHash: txHash
 });
 
 export const updateUpdateOwnership = async(
   address: string,
-  newSender: string,
+  sender: string,
   newOwner: string,
+  expiration: any,
   txHash: string,
   txHeight: number
 ) => await UpdateOwnershipModel.updateOne(
-  { address, chainId: process.env.CHAIN_ID ?? "uni-6" },
+  { address, chainId: process.env.CHAIN_ID ?? "uni-6", sender },
   {
     $set: {
-      sender: newSender,
+      sender,
       newOwner,
+      expiration,
       lastUpdatedHash: txHash,
       lastUpdatedHeight: txHeight,
     },
@@ -115,5 +119,6 @@ export const updateUpdateOwnership = async(
 
 export const getUpdateOwnershipByAddress = async (
   chainId: string,
-  address: string
-) => await UpdateOwnershipModel.findOne({ chainId, address });
+  address: string,
+  sender: string,
+) => await UpdateOwnershipModel.findOne({ chainId, address, sender });
