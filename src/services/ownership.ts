@@ -105,7 +105,7 @@ export const updateUpdateOwnership = async(
   txHash: string,
   txHeight: number
 ) => await UpdateOwnershipModel.updateOne(
-  { address, chainId: process.env.CHAIN_ID ?? "uni-6", sender },
+  { address, chainId: process.env.CHAIN_ID ?? "uni-6", sender, newOwner },
   {
     $set: {
       sender,
@@ -121,4 +121,5 @@ export const getUpdateOwnershipByAddress = async (
   chainId: string,
   address: string,
   sender: string,
-) => await UpdateOwnershipModel.findOne({ chainId, address, sender });
+  newOwner: string,
+) => await UpdateOwnershipModel.findOne({ chainId, address, sender, newOwner });

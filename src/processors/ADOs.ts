@@ -265,7 +265,7 @@ export async function handleADOUpdateOwner(batch: readonly CleanedTx[], chainId:
   const indexingType = 'update_owner';
   for (let i = 0; i < batch.length; i++) {
     const tx = batch[i];
-    // console.log("HEIGHT: ", tx.height);
+    console.log("HEIGHT: ", tx.height);
     const messages: any[] = tx.tx.body.messages;
     const value = messages[0].value;
     const textDecoder = new TextDecoder();
@@ -288,18 +288,20 @@ export async function handleADOUpdateOwner(batch: readonly CleanedTx[], chainId:
           }); 
         }
         if (msgKey === "ownership") {
-          // console.log("Expiration: ", msgObj.ownership.update_owner.expiration);
+          console.log("Expiration: ", msgObj.ownership.update_owner.expiration);
           let expiration = msgObj.ownership.update_owner.expiration;
           const updateOwnershipInfo = await getUpdateOwnershipInfo(tx.rawLog);
-          // console.log("updateOwnershipInfo: ", updateOwnershipInfo);
+          console.log("updateOwnershipInfo: ", updateOwnershipInfo);
           if (!updateOwnershipInfo) return;
 
           const { adoType, address, sender, newOwner } = updateOwnershipInfo;
           const chainId = process.env.CHAIN_ID ?? "uni-6";
-          const savedUpdateOwnership = await getUpdateOwnershipByAddress(chainId, address, sender);
+          const savedUpdateOwnership = await getUpdateOwnershipByAddress(chainId, address, sender, newOwner);
           if (savedUpdateOwnership) {
+            console.log("savedUpdateOwnership: ", savedUpdateOwnership);
             if (savedUpdateOwnership.toJSON().lastUpdatedHeight < tx.height)
               await updateUpdateOwnership(address, sender, newOwner, expiration, tx.hash, tx.height);
+              console.log(address, sender);
           } else {
             await newUpdateOwnership(adoType, address, sender, newOwner, expiration, tx.height, tx.hash);
           }

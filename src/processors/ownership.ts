@@ -121,13 +121,16 @@ export async function handleAcceptOwnership(batch: readonly CleanedTx[], chainId
           }); 
           // console.log("*****");
         } else if (expirationKey == "at_height") {
-          if(currentChainHeight > expirationValue) 
+          console.log("At_height: ", expirationValue);
+          if (currentChainHeight > expirationValue) {
             await updateAdoOwner({
               address: address,
               newOwner,
               txHeight: tx.height,
               txHash: tx.hash,
             }); 
+            console.log("expired!!!");
+          }
         } else if (expirationKey == "at_time") {
           
         }
