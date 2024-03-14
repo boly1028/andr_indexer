@@ -51,6 +51,9 @@ const ADO = new Schema({
   revokeOwnershipOffer: {
     type: revokeOwnershipOffer,
   },
+  disowned: {
+    type: Boolean,
+  },
 });
 
 export const adoModel = mongoose.model("ADO", ADO);

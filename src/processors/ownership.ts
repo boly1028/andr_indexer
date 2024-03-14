@@ -11,6 +11,7 @@ import {
   updateAdoAcceptOwnership,
   updateAdoRevokeOwnershipOffer,
   updateAdoOwner,
+  updateDisown,
 } from "../services";
 import { createOrUpdateIndexingStatus } from ".";
 import { configDotenv } from "dotenv";
@@ -195,5 +196,41 @@ export async function handleRevokeOwnershipOffer(batch: readonly CleanedTx[]) {
     }
     
     await createOrUpdateIndexingStatus(chainId, indexingType, tx.height);
+  }
+}
+
+export async function getDisownInfo(logs: readonly Log[]) {
+  const [contractAddress] = getAttribute("execute._contract_address", logs);
+  if (!contractAddress) return;
+
+  const ado = await adoModel.findOne({ address: contractAddress.value });
+  if (!ado) return;
+
+  const adoType = ado?.adoType;
+  if (!adoType) return;
+
+  const [sender] = getAttribute("message.sender", logs);
+  if (!sender) return;
+
+  const [action] = getAttribute("wasm.action", logs);
+  if (!action) return;
+
+  return {
+    adoType: adoType,
+    address: contractAddress.value,
+    action: action.value,
+    sender: sender.value,
+  };
+}
+
+export async function handleDisown(batch: readonly CleanedTx[]) {
+  for(let i = 0; i < batch.length; i++) {
+    const tx = batch[i];
+    const indexingType = "disown";
+    const disownInfo = await getDisownInfo(tx.rawLog);
+    if (!disownInfo) continue;
+
+    const { adoType, address, action, sender } = disownInfo;
+    await updateDisown(address, tx.height, tx.hash);
   }
 }

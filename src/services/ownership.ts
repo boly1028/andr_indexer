@@ -1,4 +1,4 @@
-import { AcceptOwnershipModel, RevokeOwnershipOfferModel, UpdateOwnershipModel } from "../db";
+import { AcceptOwnershipModel, RevokeOwnershipOfferModel, UpdateOwnershipModel, adoModel } from "../db";
 import { configDotenv } from "dotenv";
 configDotenv();
 
@@ -123,3 +123,26 @@ export const getUpdateOwnershipByAddress = async (
   sender: string,
   newOwner: string,
 ) => await UpdateOwnershipModel.findOne({ chainId, address, sender, newOwner });
+
+export const updateDisown = async(
+  address: string,
+  txHeight: number,
+  txHash: string,
+) => {
+  const ado = await adoModel.findOneAndUpdate(
+    { address },
+    {
+      $set: {
+        owner: null,
+        lastUpdatedHash: txHash,
+        lastUpdatedHeight: txHeight,
+        disowned: true,
+      },
+    },
+    { new: true}
+  );
+
+  console.log("Disowned ADO: ", ado);
+
+  if (!ado) return;
+}

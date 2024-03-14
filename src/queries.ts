@@ -5,6 +5,7 @@ import {
   handleCodeIDLog,
   handleAcceptOwnership,
   handleRevokeOwnershipOffer,
+  handleDisown,
 } from "./processors";
 import createClient from "@andromedaprotocol/andromeda.js/dist/clients";
 import { BatchQuery } from "./types";
@@ -61,6 +62,16 @@ const queries: BatchQuery[] = [
     ]),
     processor: handleRevokeOwnershipOffer,
     label: "Revoke Ownership Offer",
+  },
+  {
+    query: () => ([
+      {
+        key: "wasm.action",
+        value: "disown",
+      },
+    ]),
+    processor: handleDisown,
+    label: "Disown",
   },
 ];
 

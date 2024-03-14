@@ -150,8 +150,10 @@ export default class Batcher {
       indexingType = 'add_update_code_ID';
     } else if (this.label == 'Accept Ownership') {
       indexingType = 'accept_ownership';
+    } else if (this.label == 'Revoke Ownership Offer') {
+      indexingType = 'revoke_ownership_offer';
     } else {
-      indexingType = 'Revoke Ownership Offer';
+      indexingType = 'disown';
     }
 
     let minHeight: number;
